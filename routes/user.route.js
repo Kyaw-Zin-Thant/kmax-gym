@@ -7,18 +7,9 @@ const path = require('path');
 const {
   createUserController,
   getUserController,
-  // updateUserController,
-  // detailUserController,
-  // deleteUserController,
-  // createStudentController,
   loginController,
   createTrainerController,
-  // getParentHomeController,
-  // getAdminHomePaymentInfoController,
-  // getTeacherAssementsController,
-  // getTeacherAssementScoresController,
-  // getTeacherTimelineController,
-  // updateStudentController,
+  getUserHomeController,
 } = require('../controllers/user.controller');
 const router = express.Router();
 const baseURL = '/api/v1';
@@ -66,36 +57,20 @@ router.route(`${baseURL}/users`).get(getUserController);
  */
 router.route(`${baseURL}/users/login`).post(loginController);
 /**
- * user create & get
+ * Members
  */
 router
   .route(`${baseURL}/users/members`)
   .post(profileUpload, createUserController);
-// .get(getUserController);
+router.route(`${baseURL}/users/members/home`).get(getUserHomeController);
+
 /**
  *
- * user detail delete update
- */
-// router
-//   .route(`${baseURL}/users/:userId`)
-//   .put(profileUpload, updateUserController)
-//   .get(detailUserController)
-//   .delete(deleteUserController);
-/**
- *
- * Trainer Create
+ * Trainer
  */
 router
   .route(`${baseURL}/users/trainers`)
-  //   .get()
   .post(profileUpload, createTrainerController);
-// router
-//   .route(`${baseURL}/students/:studentId`)
-//   .put(profileUpload, updateStudentController);
-/**
- *
- * Home
- */
 
 exports.default = (app) => {
   app.use('/', router);

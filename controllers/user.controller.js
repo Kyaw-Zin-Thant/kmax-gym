@@ -5,18 +5,9 @@ const {
   createUserService,
   getUserService,
   updateUserService,
-  // detailUserService,
-  // deleteUserService,
-  // createStudentService,
   loginService,
   createTrainerService,
-  // getStudentService,
-  // detailStudentService,
-  // getParentHomeService,
-  // getAdminHomePaymentInfoService,
-  // getTeacherAssements,
-  // getTeacherAssementScoresService,
-  // getTeacherTimelineSevice,
+  getUserHomeService,
 } = require('../services/user.service');
 exports.createUserController = async (req, res, next) => {
   let { email, password, userType } = req.body;
@@ -228,47 +219,16 @@ exports.loginController = async (req, res, next) => {
     next(error);
   }
 };
-// exports.getStudentController = async (req, res, next) => {
-//   try {
-//     const {
-//       search,
-//       page = '1',
-//       limit = '10',
-//       sortColumn = 'createdDate',
-//       sortDirection = 'desc',
-//     } = req.query;
-//     let response = await getStudentService({
-//       search,
-//       page,
-//       limit,
-//       sortColumn,
-//       sortDirection,
-//     });
-//     res.status(200).json(response);
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-// exports.detailStudentController = async (req, res, next) => {
-//   const { studentId } = req.params;
-//   try {
-//     let response = await detailStudentService({
-//       studentId,
-//     });
-//     res.status(200).json(response);
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-// exports.getParentHomeController = async (req, res, next) => {
-//   try {
-//     const { userId } = req.headers;
-//     let response = await getParentHomeService({ userId });
-//     res.status(200).json(response);
-//   } catch (error) {
-//     next(error);
-//   }
-// };
+
+exports.getUserHomeController = async (req, res, next) => {
+  try {
+    const { userId } = req.headers;
+    let response = await getUserHomeService({ userId });
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
 // exports.getAdminHomePaymentInfoController = async (req, res, next) => {
 //   try {
 //     const {

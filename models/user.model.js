@@ -47,6 +47,14 @@ const schema = {
   upperBody: String,
   lowerBody: String,
   description: String,
+  duty: {
+    type: Boolean,
+    default: null,
+  },
+  recommended: {
+    type: Boolean,
+    default: null,
+  },
 };
 const UserSchema = new Schema(schema, {
   timestamps: {
