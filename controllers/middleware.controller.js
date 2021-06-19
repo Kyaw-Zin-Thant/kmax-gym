@@ -4,8 +4,9 @@ const jwt = require('jsonwebtoken');
 exports.checkToken = async (req, res, next) => {
   try {
     if (
-      req.path == '/api/v1/users/login' ||
       req.method == 'OPTIONS' ||
+      req.path == '/api/v1/users/login' ||
+      (req.path == '/api/v1/users/members' && req.method == 'POST') ||
       req.path.includes('/public/uploads')
     ) {
       next();

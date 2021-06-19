@@ -12,12 +12,13 @@ const {
 exports.createUserController = async (req, res, next) => {
   let { email, password, userType } = req.body;
   try {
-    await createUserService({
+    const response = await createUserService({
       email,
       password,
       userType,
     });
-    res.status(200).send({ message: 'Successfully Created' });
+    console.log(response);
+    res.status(200).send(response);
   } catch (error) {
     next(error);
   }

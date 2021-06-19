@@ -13,8 +13,18 @@ exports.createUserService = async ({ email, password, userType }) => {
   try {
     password = Base64.decode(password);
     password = await updateHash(password);
-    const user = new User({ email, password, userType }).save();
-    return { message: 'Successfully created', userId: user._id };
+    const user = await new User({ email, password, userType }).save();
+    const token = jwt.sign(
+      {
+        userId: user._id,
+        userType,
+      },
+      privateKey,
+      {
+        algorithm: 'RS256',
+      }
+    );
+    return { message: 'Successfully created', userId: user._id, token };
   } catch (error) {
     throw error;
   }
