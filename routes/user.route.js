@@ -10,6 +10,7 @@ const {
   loginController,
   createTrainerController,
   getUserHomeController,
+  createAdminController,
 } = require('../controllers/user.controller');
 const router = express.Router();
 const baseURL = '/api/v1';
@@ -71,6 +72,10 @@ router.route(`${baseURL}/users/members/home`).get(getUserHomeController);
 router
   .route(`${baseURL}/users/trainers`)
   .post(profileUpload, createTrainerController);
+
+router
+  .route(`${baseURL}/users/admin`)
+  .post(profileUpload, createAdminController);
 
 exports.default = (app) => {
   app.use('/', router);

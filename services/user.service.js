@@ -61,6 +61,34 @@ exports.createTrainerService = async ({
     throw error;
   }
 };
+exports.createAdminService = async ({
+  email,
+  password,
+  userType,
+  gender,
+  username,
+  dateOfBirth,
+  address,
+  image,
+}) => {
+  try {
+    password = Base64.decode(password);
+    password = await updateHash(password);
+    const user = new User({
+      email,
+      password,
+      userType,
+      gender,
+      username,
+      dateOfBirth,
+      address,
+      image,
+    }).save();
+    return { message: 'Successfully created', userId: user._id };
+  } catch (error) {
+    throw error;
+  }
+};
 
 exports.getUserService = async ({
   userType,
@@ -360,6 +388,7 @@ exports.updateUserService = async ({
 exports.loginService = async ({ email, password }) => {
   try {
     const user = await User.findOne({ email });
+    console.log(email);
     if (user) {
       const { _id: userId, userType = 'Student' } = user;
 
