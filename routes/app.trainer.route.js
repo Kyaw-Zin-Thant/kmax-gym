@@ -54,7 +54,7 @@ var getRandomString = function () {
  * Trainer detail
  */
 router
-  .route(`${baseURL}/users/trainers/:trainerId`)
+  .route(`${baseURL}/users/trainer/:trainerId`)
   .get(getTrainerDetailController)
   .put(updateTrainerController);
 exports.default = (app) => {

@@ -73,7 +73,7 @@ router.route(`${baseURL}/users/members/home`).get(getUserHomeController);
  * Trainer
  */
 router
-  .route(`${baseURL}/users/trainers`)
+  .route(`${baseURL}/users/trainer`)
   .post(profileUpload, createTrainerController);
 /**
  * admin
