@@ -84,7 +84,7 @@ router
 router
   .route(`${baseURL}/users/admin/:adminId`)
   .get(detailAdminController)
-  .post(profileUpload, updateAdminController);
+  .put(profileUpload, updateAdminController);
 
 router.route(`${baseURL}/users/:userId`).delete(deleteUserController);
 

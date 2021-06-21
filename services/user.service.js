@@ -79,7 +79,6 @@ exports.updateTrainerService = async ({
   try {
     const user = await User.findByIdAndUpdate(trainerId, {
       email,
-      password,
       userType,
       gender,
       username,
@@ -89,7 +88,7 @@ exports.updateTrainerService = async ({
       weight,
       description,
       trainerCode,
-    }).save();
+    });
     return { message: 'Successfully updated', userId: user._id };
   } catch (error) {
     throw error;
@@ -253,22 +252,22 @@ exports.getUserService = async ({
           updatedDate: 1,
           weight: { $cond: ['$weight', '$weight', ''] },
           height: { $cond: ['$height', '$height', ''] },
-          age: {
-            $divide: [
-              {
-                $subtract: [
-                  new Date(),
-                  {
-                    $dateFromString: {
-                      dateString: '$dateOfBirth',
-                      format: '%d/%m/%Y',
-                    },
-                  },
-                ],
-              },
-              365 * 24 * 60 * 60 * 1000,
-            ],
-          },
+          // age: {
+          //   $divide: [
+          //     {
+          //       $subtract: [
+          //         new Date(),
+          //         {
+          //           $dateFromString: {
+          //             dateString: '$dateOfBirth',
+          //             format: '%d/%m/%Y',
+          //           },
+          //         },
+          //       ],
+          //     },
+          //     365 * 24 * 60 * 60 * 1000,
+          //   ],
+          // },
 
           trainerCode: 1,
         },
