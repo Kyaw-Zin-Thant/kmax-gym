@@ -11,6 +11,7 @@ const {
   createAdminService,
   detailUserService,
   deleteUserService,
+  updateAdminService,
 } = require('../services/user.service');
 exports.createUserController = async (req, res, next) => {
   let { email, password, userType = 'Member' } = req.body;

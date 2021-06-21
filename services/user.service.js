@@ -354,6 +354,7 @@ exports.detailUserService = async ({ userId }) => {
           height: 1,
           weight: 1,
           description: 1,
+          address:1
         },
       },
     ]).exec();
