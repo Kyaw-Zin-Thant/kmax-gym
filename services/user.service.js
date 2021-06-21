@@ -9,6 +9,7 @@ const privateKey = fs.readFileSync('config/jwtRS256.key', 'utf8');
 const publicKey = fs.readFileSync('config/jwtRS256.key.pub', 'utf8');
 const jwt = require('jsonwebtoken');
 const Base64 = require('../config/base64');
+const crypto = require('crypto');
 exports.createUserService = async ({ email, password, userType }) => {
   try {
     password = Base64.decode(password);
@@ -44,6 +45,7 @@ exports.createTrainerService = async ({
   try {
     password = Base64.decode(password);
     password = await updateHash(password);
+    const trainerCode = crypto.randomBytes(9).toString('hex');
     const user = new User({
       email,
       password,
@@ -55,8 +57,40 @@ exports.createTrainerService = async ({
       height,
       weight,
       description,
+      trainerCode,
     }).save();
     return { message: 'Successfully created', userId: user._id };
+  } catch (error) {
+    throw error;
+  }
+};
+exports.updateTrainerService = async ({
+  trainerId,
+  email,
+  userType,
+  gender,
+  username,
+  techanics,
+  dateOfBirth,
+  height,
+  weight,
+  description,
+}) => {
+  try {
+    const user = await User.findByIdAndUpdate(trainerId, {
+      email,
+      password,
+      userType,
+      gender,
+      username,
+      techanics,
+      dateOfBirth,
+      height,
+      weight,
+      description,
+      trainerCode,
+    }).save();
+    return { message: 'Successfully updated', userId: user._id };
   } catch (error) {
     throw error;
   }
@@ -89,7 +123,42 @@ exports.createAdminService = async ({
     throw error;
   }
 };
+exports.updateAdminService = async ({
+  email,
+  password,
+  userType,
+  gender,
+  username,
+  dateOfBirth,
+  address,
+  image,
+  adminId,
+}) => {
+  try {
+    let updateData = {
+      email,
+      userType,
+      gender,
+      username,
+      dateOfBirth,
+      address,
+    };
 
+    if (password) {
+      password = Base64.decode(password);
+      password = await updateHash(password);
+      updateData.password = password;
+    }
+    if (image) {
+      updateData.image = image;
+    }
+
+    const user = await User.findByIdAndUpdate(adminId, updateData);
+    return { message: 'Successfully updated', userId: user._id };
+  } catch (error) {
+    throw error;
+  }
+};
 exports.getUserService = async ({
   userType,
   search,
@@ -182,6 +251,26 @@ exports.getUserService = async ({
           phoneNumber: 1,
           createdDate: 1,
           updatedDate: 1,
+          weight: { $cond: ['$weight', '$weight', ''] },
+          height: { $cond: ['$height', '$height', ''] },
+          age: {
+            $divide: [
+              {
+                $subtract: [
+                  new Date(),
+                  {
+                    $dateFromString: {
+                      dateString: '$dateOfBirth',
+                      format: '%d/%m/%Y',
+                    },
+                  },
+                ],
+              },
+              365 * 24 * 60 * 60 * 1000,
+            ],
+          },
+
+          trainerCode: 1,
         },
       },
       {
@@ -206,6 +295,7 @@ exports.getUserService = async ({
     response.sortDirection = sortDirection === -1 ? 'desc' : 'asc';
     return response;
   } catch (error) {
+    console.log(error);
     throw error;
   }
 };
@@ -246,91 +336,44 @@ exports.updateUserService = async ({
     throw error;
   }
 };
-// exports.detailUserService = async ({ userId }) => {
-//   try {
-//     console.log('in detail');
-//     let result = await User.aggregate([
-//       {
-//         $match: { _id: ObjectId(userId) },
-//       },
-//       {
-//         $project: {
-//           _id: 0,
-//           userId: '$_id',
-//           username: 1,
-//           email: 1,
-//           role: 1,
-//           gender: 1,
-//           dateOfBirth: 1,
-//           image: 1,
-//           address: 1,
-//           relationship: 1,
-//           phoneNumber: 1,
-//           createdDate: 1,
-//           updatedDate: 1,
-//           position: 1,
-//           education: 1,
-//           emergencyContact: 1,
-//           startDate: 1,
-//           parent: 1,
-//           year: 1,
-//         },
-//       },
-//     ]).exec();
-//     let user = result[0];
-//     console.log(result[0].userId);
-//     if (user.role == 'Parent') {
-//       let students = await User.find({ parent: ObjectId(userId) });
-//       students = students.map((student) => {
-//         student.studentId = student._id;
-//         delete student._id;
-//         return student;
-//       });
-//       console.log(students);
-//       user.students = students;
-//     } else if (user.role == 'Student') {
-//       let studentResult = await Promise.all([
-//         Payment.findOne({
-//           studentId: ObjectId(userId),
-//           parentId: user.parent,
-//         }).sort({ _id: -1 }),
-//         Year.findOne({ _id: user.year }),
-//       ]);
-//       let paymentInfo = studentResult[0];
-//       let year = studentResult[1] || {};
-//       if (paymentInfo) {
-//         const {
-//           _id: paymentId,
-//           amount,
-//           months,
-//           description,
-//           payDate,
-//         } = paymentInfo;
-//         user.paymentInfo = { paymentId, amount, months, description, payDate };
-//       } else {
-//         user.paymentInfo = {};
-//       }
-//       if (year) {
-//         const { _id: yearId, name } = year;
-//         user.year = { yearId, name };
-//       } else {
-//         user.year = {};
-//       }
-//     }
-//     return { user };
-//   } catch (error) {
-//     console.log(error);
-//     throw error;
-//   }
-// };
-// exports.deleteUserService = async ({ userId }) => {
-//   try {
-//     await User.deleteOne({ _id: ObjectId(userId) });
-//     return { message: 'Successfully Deleted' };
-//   } catch (error) {
-//     throw error;
-//   }
-// };
+exports.detailUserService = async ({ userId }) => {
+  try {
+    let result = await User.aggregate([
+      {
+        $match: { _id: ObjectId(userId) },
+      },
+      {
+        $project: {
+          _id: 0,
+          userId: '$_id',
+          email: 1,
+          userType: 1,
+          gender: 1,
+          username: 1,
+          techanics: 1,
+          dateOfBirth: 1,
+          height: 1,
+          weight: 1,
+          description: 1,
+        },
+      },
+    ]).exec();
+    let user = result[0];
+
+    return { user };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+exports.deleteUserService = async ({ userId }) => {
+  try {
+    await User.deleteOne({ _id: ObjectId(userId) });
+    return { message: 'Successfully Deleted' };
+  } catch (error) {
+    throw error;
+  }
+};
 // exports.createStudentService = async ({
 //   username,
 //   email,
@@ -521,6 +564,7 @@ exports.getUserHomeService = async ({ userId }) => {
             height: 1,
             weight: 1,
             image: 1,
+            trainerCode: 1,
           },
         },
       ]),

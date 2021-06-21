@@ -5,11 +5,9 @@ const fs = require('fs');
 var mkdirp = require('mkdirp');
 const path = require('path');
 const {
-  updatMemberInfoController,
-  updateMemberBodyInfo,
-  memberDetailInfoController,
-  bookingController,
-} = require('../controllers/app.member.controller');
+  getTrainerDetailController,
+  updateTrainerController,
+} = require('../controllers/app.trainer.controller');
 const router = express.Router();
 const baseURL = '/api/v1';
 // profile image upload
@@ -50,23 +48,15 @@ var profileUpload = multer({
 var getRandomString = function () {
   return Math.random().toString(36).substring(2) + Date.now();
 };
-/**
- * Members Information
- */
-router
-  .route(`${baseURL}/users/members/:memberId`)
-  .put(updatMemberInfoController);
-/**
- * Member Detail
- */
-router.route(`${baseURL}/users/members/detail`).get(memberDetailInfoController);
 
 /**
  *
- * Member booking
+ * Trainer detail
  */
-router.route(`${baseURL}/users/members/booking`).post(bookingController);
-
+router
+  .route(`${baseURL}/users/trainers/:trainerId`)
+  .get(getTrainerDetailController)
+  .put(updateTrainerController);
 exports.default = (app) => {
   app.use('/', router);
 };

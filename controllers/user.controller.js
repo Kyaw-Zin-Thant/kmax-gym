@@ -9,9 +9,11 @@ const {
   createTrainerService,
   getUserHomeService,
   createAdminService,
+  detailUserService,
+  deleteUserService,
 } = require('../services/user.service');
 exports.createUserController = async (req, res, next) => {
-  let { email, password, userType } = req.body;
+  let { email, password, userType = 'Member' } = req.body;
   try {
     const response = await createUserService({
       email,
@@ -421,7 +423,7 @@ exports.createAdminController = async (req, res, next) => {
       await profileImage.write(imagepath + imageName);
       fs.unlinkSync(imagepath + req.uploadfilename);
     }
-    await createAdminService({
+    const response = await createAdminService({
       email,
       password,
       userType,
@@ -431,8 +433,78 @@ exports.createAdminController = async (req, res, next) => {
       address,
       image,
     });
-    res.status(200).send({ message: 'Successfully Created' });
+    res.status(200).send(response);
   } catch (error) {
     next(error);
+  }
+};
+
+exports.updateAdminController = async (req, res, next) => {
+  let {
+    email,
+    password,
+    userType = 'Admin',
+    gender,
+    username,
+    dateOfBirth,
+    address,
+    adminId,
+  } = { ...req.body, ...req.params };
+  try {
+    var imagepath = path.join(__dirname, '../public/uploads/profileImage/');
+    const host = req.headers.host;
+    const imageType =
+      req.file && req.file.mimetype === 'image/png'
+        ? '.png'
+        : req.file && req.file.mimetype === '.jpg'
+        ? '.jpg'
+        : '.jpeg';
+    const imageName = req.file
+      ? req.uploadfilename.split('.blob')[0] + imageType
+      : '';
+    image = req.file
+      ? req.protocol +
+        '://' +
+        host +
+        '/public/uploads/profileImage/' +
+        imageName
+      : '';
+    if (req.file) {
+      let profileImage = await Jimp.read(imagepath + req.uploadfilename);
+      await profileImage.write(imagepath + imageName);
+      fs.unlinkSync(imagepath + req.uploadfilename);
+    }
+    await updateAdminService({
+      email,
+      password,
+      userType,
+      gender,
+      username,
+      dateOfBirth,
+      address,
+      image,
+      adminId,
+    });
+    res.status(200).send({ message: 'Successfully Updated' });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.detailAdminController = async (req, res, next) => {
+  try {
+    const { adminId } = req.params;
+    const response = await detailUserService({ userId: adminId });
+    res.json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+exports.deleteUserController = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const response = await deleteUserService({ userId });
+    res.json(response);
+  } catch (error) {
+    next(errro);
   }
 };

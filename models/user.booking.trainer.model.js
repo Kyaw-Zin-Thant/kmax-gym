@@ -6,9 +6,12 @@ const schema = {
   trainerId: ObjectId,
   status: {
     type: String,
+    enum: ['Pending', 'Accept', 'Reject'],
   },
-  trainingTime: Date,
+  startTime: Date,
+  endTime: Date,
   techanics: String,
+  count: Number,
 };
 const UserApplyTrainerSchema = new Schema(schema, {
   timestamps: {

@@ -21,7 +21,13 @@ const schema = {
   experience: [
     {
       place: String,
-      workExperience: String,
+      position: String,
+      description: String,
+      startDate: Date,
+      endDate: {
+        type: Date,
+        default: Date.now(),
+      },
     },
   ],
   certificate: [
@@ -55,6 +61,7 @@ const schema = {
     type: Boolean,
     default: null,
   },
+  trainerCode: String,
 };
 const UserSchema = new Schema(schema, {
   timestamps: {

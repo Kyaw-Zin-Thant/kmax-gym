@@ -11,6 +11,9 @@ const {
   createTrainerController,
   getUserHomeController,
   createAdminController,
+  updateAdminController,
+  detailAdminController,
+  deleteUserController,
 } = require('../controllers/user.controller');
 const router = express.Router();
 const baseURL = '/api/v1';
@@ -72,10 +75,18 @@ router.route(`${baseURL}/users/members/home`).get(getUserHomeController);
 router
   .route(`${baseURL}/users/trainers`)
   .post(profileUpload, createTrainerController);
-
+/**
+ * admin
+ */
 router
   .route(`${baseURL}/users/admin`)
   .post(profileUpload, createAdminController);
+router
+  .route(`${baseURL}/users/admin/:adminId`)
+  .get(detailAdminController)
+  .post(profileUpload, updateAdminController);
+
+router.route(`${baseURL}/users/:userId`).delete(deleteUserController);
 
 exports.default = (app) => {
   app.use('/', router);

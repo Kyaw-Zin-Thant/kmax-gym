@@ -6,7 +6,7 @@ exports.errorHandler = (error, req, res, next) => {
     data,
     validation,
   } = error;
-
+  console.log(error);
   res.status(status || statusCode).json({
     message,
     data,

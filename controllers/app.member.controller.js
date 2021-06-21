@@ -1,6 +1,8 @@
 const {
   updatMemberInfoService,
   updateMemberBodyInfoService,
+  memberDetailInfoService,
+  bookingService,
 } = require('../services/app.member.service');
 /**
  * After acc sign up update user info
@@ -73,6 +75,37 @@ exports.updateMemberBodyInfo = async (req, res, next) => {
     res.json(response);
   } catch (error) {
     console.log(error);
+    next(error);
+  }
+};
+/**
+ * member info
+ */
+exports.memberDetailInfoController = async (req, res, next) => {
+  try {
+    const { userId } = req.headers;
+    const response = await memberDetailInfoService({ userId });
+    res.json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+exports.bookingController = async (req, res, next) => {
+  try {
+    const { userId } = req.headers;
+    const { trainerId, startDate, startTime, endTime, techanics, count } =
+      req.body;
+    const response = await bookingService({
+      userId,
+      trainerId,
+      startDate,
+      startTime,
+      endTime,
+      techanics,
+      count,
+    });
+    res.json(response);
+  } catch (error) {
     next(error);
   }
 };
