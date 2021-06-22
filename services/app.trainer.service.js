@@ -18,8 +18,8 @@ exports.getTrainerDetailService = async ({ trainerId }) => {
         techanics,
         description,
       } = trainer;
-      console.log(dateOfBirth);
-      dateOfBirth = moment(dateOfBirth, 'DD-MM-YYYY');
+
+      dateOfBirth = moment(dateOfBirth, 'YYYY-MM-DD');
       let bmi, realweight, realheight;
       realweight = weight.split(' ');
       realheight = height.split(' ');
@@ -28,7 +28,7 @@ exports.getTrainerDetailService = async ({ trainerId }) => {
 
       console.log(realweight, realheight, ' ', trainer);
       bmi = calcBmi(realweight, realheight, true);
-
+      console.log(dateOfBirth);
       return {
         username,
         dateOfBirth,

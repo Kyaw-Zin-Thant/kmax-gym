@@ -260,7 +260,7 @@ exports.getUserService = async ({
           //         {
           //           $dateFromString: {
           //             dateString: '$dateOfBirth',
-          //             format: '%d/%m/%Y',
+          //             // format: '%d/%m/%Y',
           //           },
           //         },
           //       ],
@@ -288,7 +288,14 @@ exports.getUserService = async ({
     ]);
     let response = {};
     const { users, totalCount } = result[0];
-    response.users = users;
+    response.users = users.map((user) => {
+      console.log(user.dateOfBirth, ' checking ');
+      user.age =
+        (new Date().getTime() - new Date(user.dateOfBirth)) /
+        (365 * 24 * 60 * 60 * 1000);
+
+      return user;
+    });
     response.totalCount = totalCount[0] ? totalCount[0].count : 0;
     response.sortColumn = sortColumn;
     response.sortDirection = sortDirection === -1 ? 'desc' : 'asc';
@@ -354,7 +361,7 @@ exports.detailUserService = async ({ userId }) => {
           height: 1,
           weight: 1,
           description: 1,
-          address:1
+          address: 1,
         },
       },
     ]).exec();
@@ -553,7 +560,7 @@ exports.getUserHomeService = async ({ userId }) => {
                     {
                       $dateFromString: {
                         dateString: '$dateOfBirth',
-                        format: '%d/%m/%Y',
+                        format: '%Y/%m/%d',
                       },
                     },
                   ],
