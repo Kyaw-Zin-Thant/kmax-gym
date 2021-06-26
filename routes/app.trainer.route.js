@@ -7,13 +7,18 @@ const path = require('path');
 const {
   getTrainerDetailController,
   updateTrainerController,
+  getTrainerBookingController,
+  bookingStatusUpdateController,
+  updateTrainerProfileController,
+  getDietPlanController,
+  suggestMemberController,
 } = require('../controllers/app.trainer.controller');
 const router = express.Router();
 const baseURL = '/api/v1';
 // profile image upload
 var profileImgStorage = multer.diskStorage({
   destination: function (req, file, callback) {
-    var uploadpath = path.join(__dirname, '../public/uploads/bodyInfo');
+    var uploadpath = path.join(__dirname, '../public/uploads/profileImage');
     req.uploadpath = uploadpath;
     fs.stat(uploadpath, function (err, stat) {
       if (stat) {
@@ -57,6 +62,24 @@ router
   .route(`${baseURL}/users/trainer/:trainerId`)
   .get(getTrainerDetailController)
   .put(updateTrainerController);
+/**
+ *
+ * Trainer Home
+ */
+router.route(`${baseURL}/users/trainers/home`).get(getTrainerBookingController);
+
+router
+  .route(`${baseURL}/bookings/:bookingId/:status`)
+  .post(bookingStatusUpdateController);
+router
+  .route(`${baseURL}/users/trainer/:trainerId/profile`)
+  .put(profileUpload, updateTrainerProfileController);
+router.route(`${baseURL}/diet-plans`).get(getDietPlanController);
+
+router
+  .route(`${baseURL}/suggest-member/:bookingId`)
+  .put(suggestMemberController);
+
 exports.default = (app) => {
   app.use('/', router);
 };

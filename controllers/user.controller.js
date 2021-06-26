@@ -12,6 +12,7 @@ const {
   detailUserService,
   deleteUserService,
   updateAdminService,
+  getBookingHistroyService,
 } = require('../services/user.service');
 exports.createUserController = async (req, res, next) => {
   let { email, password, userType = 'Member' } = req.body;
@@ -504,6 +505,15 @@ exports.deleteUserController = async (req, res, next) => {
   try {
     const { userId } = req.params;
     const response = await deleteUserService({ userId });
+    res.json(response);
+  } catch (error) {
+    next(errro);
+  }
+};
+exports.getBookingHistroyController = async (req, res, next) => {
+  try {
+    const { userId, userType } = req.headers;
+    const response = await getBookingHistroyService({ userId, userType });
     res.json(response);
   } catch (error) {
     next(errro);

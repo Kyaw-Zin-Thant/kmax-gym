@@ -602,6 +602,115 @@ exports.getUserHomeService = async ({ userId }) => {
     throw error;
   }
 };
+exports.getBookingHistroyService = async ({ userId, userType }) => {
+  try {
+    let matchQuery = {
+      $match: {},
+    };
+    if (userType == 'Trainer') {
+      matchQuery = {
+        $match: {
+          'trainers.userId': ObjectId(userId),
+        },
+      };
+    } else if (userType == 'Member') {
+      matchQuery = {
+        $match: {
+          userId: ObjectId(userId),
+        },
+      };
+    }
+    let result = await UserBookedTrainer.aggregate([
+      {
+        $unwind: {
+          path: '$trainers',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      matchQuery,
+      {
+        $lookup: {
+          from: 'users',
+          let: { trainerId: '$trainers.userId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$_id', '$$trainerId'],
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                username: 1,
+                phoneNumber: 1,
+                image: 1,
+              },
+            },
+          ],
+          as: 'trainer',
+        },
+      },
+      {
+        $unwind: {
+          path: '$trainer',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          let: { userId: '$userId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$_id', '$$userId'],
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                username: 1,
+                phoneNumber: 1,
+                image: 1,
+                height: 1,
+                weight: 1,
+                medicalCheckUp: 1,
+                address: 1,
+                dateOfBirth: 1,
+              },
+            },
+          ],
+          as: 'member',
+        },
+      },
+      {
+        $unwind: {
+          path: '$member',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          bookingId: '$_id',
+          member: 1,
+          trainer: 1,
+          status: 'Finished Training',
+          techanics: '$trainers.techanics',
+          startTime: '$trainers.startTime',
+          endTime: '$trainers.endTime',
+        },
+      },
+    ]);
+    return result;
+  } catch (error) {
+    throw error;
+  }
+};
 Date.prototype.addHours = function (h) {
   this.setHours(this.getHours() + h);
   return this;

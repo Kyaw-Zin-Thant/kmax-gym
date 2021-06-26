@@ -14,6 +14,7 @@ const {
   updateAdminController,
   detailAdminController,
   deleteUserController,
+  getBookingHistroyController,
 } = require('../controllers/user.controller');
 const router = express.Router();
 const baseURL = '/api/v1';
@@ -87,6 +88,10 @@ router
   .put(profileUpload, updateAdminController);
 
 router.route(`${baseURL}/users/:userId`).delete(deleteUserController);
+
+router
+  .route(`${baseURL}/users/bookings/history`)
+  .get(getBookingHistroyController);
 
 exports.default = (app) => {
   app.use('/', router);

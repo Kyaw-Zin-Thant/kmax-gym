@@ -34,6 +34,7 @@ const schema = {
     {
       name: String,
       year: String,
+      description: String,
     },
   ],
   medicalCheckUp: {
@@ -62,6 +63,7 @@ const schema = {
     default: null,
   },
   trainerCode: String,
+  muli_address: [String],
 };
 const UserSchema = new Schema(schema, {
   timestamps: {

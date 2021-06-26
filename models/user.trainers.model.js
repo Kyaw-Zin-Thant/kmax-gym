@@ -6,8 +6,10 @@ const schema = {
   trainers: [
     {
       userId: ObjectId,
-      trainingTime: Date,
+      startTime: Date,
+      endTime: Date,
       techanics: String,
+      bookingId: ObjectId,
     },
   ],
 };

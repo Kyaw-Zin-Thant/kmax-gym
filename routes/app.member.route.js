@@ -56,6 +56,9 @@ var getRandomString = function () {
 router
   .route(`${baseURL}/users/members/:memberId`)
   .put(updatMemberInfoController);
+router
+  .route(`${baseURL}/users/members/:memberId/body`)
+  .put(profileUpload, updateMemberBodyInfo);
 /**
  * Member Detail
  */
