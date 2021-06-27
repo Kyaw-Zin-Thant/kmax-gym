@@ -202,7 +202,7 @@ exports.getUserService = async ({
     }
     let sortQuery = {
       $sort: {
-        createdDate: -1,
+        createdDate: sortDirection,
       },
     };
     if (sortColumn === 'username') {

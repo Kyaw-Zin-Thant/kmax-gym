@@ -10,6 +10,7 @@ const schema = {
   payDate: {
     type: Date,
   },
+  paymentId: ObjectId,
 };
 const UserPaymentSchema = new Schema(schema, {
   timestamps: {
