@@ -211,6 +211,22 @@ exports.getPaymentService = async ({
       searchQuery,
       sortQuery,
       {
+        $project: {
+          _id: 0,
+          paymentId: '$_id',
+          accountNo: 1,
+          accountType: 1,
+          amount: 1,
+          description: 1,
+          paytype: 1,
+          status: 1,
+          payAccount: 1,
+          payAccountType: 1,
+          createdDate: 1,
+          updatedDate: 1,
+        },
+      },
+      {
         $facet: {
           payments: [{ $skip: skip }, { $limit: limit }],
           totalCount: [
