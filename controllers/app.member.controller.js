@@ -19,6 +19,7 @@ exports.updatMemberInfoController = async (req, res, next) => {
       medicalCheckUp = '',
       memberId,
     } = { ...req.body, ...req.params };
+    console.log(req.body);
     const response = await updatMemberInfoService({
       username,
       gender,

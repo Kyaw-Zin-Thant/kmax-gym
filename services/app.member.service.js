@@ -21,6 +21,7 @@ exports.updatMemberInfoService = async ({
     address ? (updateData.address = address) : '';
     emergencyContact ? (updateData.emergencyContact = emergencyContact) : '';
     medicalCheckUp ? (updateData.medicalCheckUp = medicalCheckUp) : '';
+    console.log(updateData);
     await User.findByIdAndUpdate(memberId, updateData);
     return { message: 'Successfully Updated', memberId };
   } catch (error) {
@@ -48,15 +49,30 @@ exports.memberDetailInfoService = async ({ userId }) => {
   try {
     const member = await User.findById(userId);
     if (member) {
-      let { username, dateOfBirth, weight, height, gender } = member;
-      console.log(dateOfBirth);
-      dateOfBirth = moment(dateOfBirth, 'DD-MM-YYYY');
+      let {
+        username,
+        dateOfBirth,
+        weight,
+        height,
+        gender,
+        image,
+        phoneNumber,
+        address,
+        emergencyContact,
+        medicalCheckUp,
+      } = member;
+      dateOfBirth = moment(new Date(dateOfBirth), 'DD-MM-YYYY');
       let bmi, realweight, realheight;
       realweight = weight.split(' ');
       realheight = height.split(' ');
       realweight = realweight[1] == 'kg' ? realweight[0] * 2.2 : realweight[0];
-      realheight = realheight[1] == 'cm' ? realheight[0] * 0.03 : realheight[0];
+      realheight =
+        realheight[1] == 'cm' ? realheight[0] * 0.03 : realheight[0] * 12;
       bmi = calcBmi(realweight, realheight, true);
+      bmi.value = bmi.value.toFixed(2);
+      const { heartDisease, kneePain, backPain, broken, surgery, other } =
+        medicalCheckUp;
+      console.log(medicalCheckUp);
       return {
         username,
         dateOfBirth,
@@ -64,7 +80,18 @@ exports.memberDetailInfoService = async ({ userId }) => {
         height,
         gender,
         bmi,
+        image,
         userId,
+        emerName: emergencyContact ? emergencyContact.name : '',
+        emerPhone: emergencyContact ? emergencyContact.phoneNumber : '',
+        heartDisease,
+        phoneNumber,
+        address,
+        kneePain,
+        backPain,
+        broken,
+        surgery,
+        other,
       };
     } else {
       return null;

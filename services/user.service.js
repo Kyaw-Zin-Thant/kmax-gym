@@ -1,5 +1,6 @@
 const User = require('../models/user.model');
 const UserBookedTrainer = require('../models/user.trainers.model');
+const UserBooking = require('../models/user.booking.trainer.model');
 const mongoose = require('mongoose');
 const moment = require('moment');
 const { ObjectId } = mongoose.Types;
@@ -13,6 +14,7 @@ const crypto = require('crypto');
 exports.createUserService = async ({ email, password, userType }) => {
   try {
     password = Base64.decode(password);
+    console.log(password);
     password = await updateHash(password);
     const user = await new User({ email, password, userType }).save();
     const token = jwt.sign(
@@ -486,25 +488,22 @@ exports.getUserHomeService = async ({ userId }) => {
     let endDate = new Date();
     startDate.setHours(0, 0, 0, 0);
     endDate.setHours(23, 59, 59, 59);
+    console.log(startDate);
+    console.log(endDate);
+
     let result = await Promise.all([
-      UserBookedTrainer.aggregate([
+      UserBooking.aggregate([
         {
           $match: {
             userId: ObjectId(userId),
           },
         },
         {
-          $unwind: {
-            path: '$trainers',
-            preserveNullAndEmptyArrays: true,
-          },
-        },
-        {
           $match: {
             $expr: {
               $and: [
-                { $gte: ['trainers.trainingTime', startDate] },
-                { $lte: ['trainers.trainingTime', endDate] },
+                { $gte: ['$startTime', startDate] },
+                { $lte: ['$endTime', endDate] },
               ],
             },
           },
@@ -512,7 +511,7 @@ exports.getUserHomeService = async ({ userId }) => {
         {
           $lookup: {
             from: 'users',
-            let: { trainerId: '$trainers.userId' },
+            let: { trainerId: '$trainerId' },
             pipeline: [
               {
                 $match: {
@@ -524,9 +523,29 @@ exports.getUserHomeService = async ({ userId }) => {
               {
                 $project: {
                   _id: 0,
-                  name: 1,
-                  phoneNumber: 1,
+                  userId: '$_id',
+                  username: 1,
                   image: 1,
+                  height: 1,
+                  weight: 1,
+                  image: 1,
+                  age: {
+                    $divide: [
+                      {
+                        $subtract: [
+                          new Date(),
+                          {
+                            $dateFromString: {
+                              dateString: '$dateOfBirth',
+                              format: '%Y/%m/%d',
+                            },
+                          },
+                        ],
+                      },
+                      365 * 24 * 60 * 60 * 1000,
+                    ],
+                  },
+                  trainerCode: 1,
                 },
               },
             ],
@@ -537,9 +556,11 @@ exports.getUserHomeService = async ({ userId }) => {
           $project: {
             _id: 1,
             bookId: '$_id',
-            techanics: '$trainers.techanics',
-            trainingStartTime: '$trainers.trainingTime',
+            techanics: 1,
+            startTime: '$startTime',
+            endTime: '$endTime',
             trainer: 1,
+            status: 1,
           },
         },
       ]),
@@ -578,24 +599,28 @@ exports.getUserHomeService = async ({ userId }) => {
     ]);
     let todayBooking = result[0][0];
     const suggestions = result[1];
+    // todayBooking
+    //   ? (todayBooking.trainingDay = moment(
+    //       todayBooking.startTime,
+    //       'YYYY/MM/DD'
+    //     ).format('LL'))
+    //   : '';
+    // todayBooking
+    //   ? (todayBooking.trainingEndTime = todayBooking.startTime
+    //       .addHours(1)
+    //       .setMinutes(todayBooking.startTime.getMinutes() + 30))
+    //   : '';
+    // todayBooking
+    //   ? (todayBooking.trainingTime =
+    //       moment(todayBooking.).format('LT') +
+    //       '-' +
+    //       moment(todayBooking.trainingEndTime).format('LT'))
+    //   : '';
+    todayBooking = todayBooking ? todayBooking : null;
     todayBooking
-      ? (todayBooking.trainingDay = moment(
-          todayBooking.trainingStartTime,
-          'YYYY/MM/DD'
-        ).format('LL'))
+      ? (todayBooking.trainer[0].age = Math.floor(todayBooking.trainer[0].age))
       : '';
-    todayBooking
-      ? (todayBooking.trainingEndTime = todayBooking.trainingStartTime
-          .addHours(1)
-          .setMinutes(trainingStartTime.getMinutes() + 30))
-      : '';
-    todayBooking
-      ? (todayBooking.trainingTime =
-          moment(todayBooking.trainingStartTime).format('LT') +
-          '-' +
-          moment(todayBooking.trainingEndTime).format('LT'))
-      : '';
-
+    console.log(todayBooking);
     return { todayBooking: todayBooking || {}, suggestions };
   } catch (error) {
     console.log(error);
