@@ -11,6 +11,7 @@ const publicKey = fs.readFileSync('config/jwtRS256.key.pub', 'utf8');
 const jwt = require('jsonwebtoken');
 const Base64 = require('../config/base64');
 const crypto = require('crypto');
+const Notification = require('../models/notification.model');
 exports.createUserService = async ({ email, password, userType }) => {
   try {
     password = Base64.decode(password);
@@ -732,6 +733,57 @@ exports.getBookingHistroyService = async ({ userId, userType }) => {
       },
     ]);
     return result;
+  } catch (error) {
+    throw error;
+  }
+};
+exports.saveFirebaseTokenService = async ({ userId, firebaseToken }) => {
+  try {
+    await User.findByIdAndUpdate(userId, { firebaseToken });
+    return { message: 'Successfully Updated' };
+  } catch (error) {
+    throw error;
+  }
+};
+exports.getNotificationService = async ({ userId }) => {
+  try {
+    const result = await Notification.find(
+      { to: ObjectId(userId) },
+      {
+        _id: 0,
+        notiId: '$_id',
+        title: 1,
+        body: 1,
+        type: { $cond: ['$type', '$type', 'booking'] },
+      }
+    );
+
+    return result;
+  } catch (error) {
+    throw error;
+  }
+};
+exports.updateTrainerLocationService = async ({
+  userId,
+  latitude,
+  longitude,
+}) => {
+  try {
+    await User.findByIdAndUpdate(userId, {
+      metadata: { latitude, longitude },
+    });
+
+    return { message: 'Successfully Updated' };
+  } catch (error) {
+    throw error;
+  }
+};
+exports.getTrainerLocationService = async ({ trainerId }) => {
+  try {
+    let trainer = await User.findById(trainerId);
+    const { metadata } = trainer;
+    const { latitude, longitude } = metadata;
+    return { latitude, longitude };
   } catch (error) {
     throw error;
   }

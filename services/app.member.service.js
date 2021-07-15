@@ -2,6 +2,8 @@ const User = require('../models/user.model');
 const moment = require('moment');
 var calcBmi = require('bmi-calc');
 const UserBooking = require('../models/user.booking.trainer.model');
+const { SendFirebaseMessage } = require('./firebase.messaging.service');
+const Notification = require('../models/notification.model');
 exports.updatMemberInfoService = async ({
   username,
   gender,
@@ -104,17 +106,19 @@ exports.bookingService = async ({
   userId,
   trainerId,
   startDate,
-  startTime,
-  endTime,
+  selectedTime,
   techanics,
-  count,
+  count = 1,
 }) => {
   try {
     let formatDate = moment(startDate).format('YYYY-MM-DD');
+    const startTime = selectedTime == 1 ? '7:30 AM' : '12:00 AM';
+    const endTime = selectedTime == 1 ? '9:00 AM' : '1:30 AM';
+
     startDate = new Date(formatDate + ' ' + startTime);
     let endDate = new Date(formatDate + ' ' + endTime);
     let status = 'Pending';
-    const booking = await new UserBooking({
+    const userBooking = await new UserBooking({
       userId,
       trainerId,
       status,
@@ -122,8 +126,39 @@ exports.bookingService = async ({
       endTime: endDate,
       techanics,
       count,
-    }).save();
-    return { message: 'Successfully Booked', bookingId: booking._id };
+    });
+    const result = await Promise.all([
+      userBooking.save(),
+      User.findById(trainerId),
+      new Notification({
+        title: 'Your have a booking',
+        body:
+          `Booking For ` +
+          moment(startDate).format('dddd, MMMM Do YYYY') +
+          ` ${startTime} ${endTime}`,
+        to: trainerId,
+        type: 'booking',
+      }).save(),
+    ]);
+    SendFirebaseMessage({
+      data: {
+        title: 'Your have a booking',
+        body:
+          `Booking For ` +
+          moment(startDate).format('dddd, MMMM Do YYYY') +
+          ` ${startTime} ${endTime}`,
+      },
+      notification: {
+        title: 'Your have a booking',
+        body:
+          `Booking For ` +
+          moment(startDate).format('dddd, MMMM Do YYYY') +
+          ` ${startTime} ${endTime}`,
+      },
+      // priority: 'normal',
+      to: result[1].firebaseToken || '',
+    });
+    return { message: 'Successfully Booked', bookingId: result[0]._id };
   } catch (error) {
     throw error;
   }

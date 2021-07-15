@@ -94,14 +94,12 @@ exports.memberDetailInfoController = async (req, res, next) => {
 exports.bookingController = async (req, res, next) => {
   try {
     const { userId } = req.headers;
-    const { trainerId, startDate, startTime, endTime, techanics, count } =
-      req.body;
+    const { trainerId, startDate, selectedTime, techanics, count } = req.body;
     const response = await bookingService({
       userId,
       trainerId,
       startDate,
-      startTime,
-      endTime,
+      selectedTime,
       techanics,
       count,
     });

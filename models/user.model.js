@@ -64,6 +64,11 @@ const schema = {
   },
   trainerCode: String,
   muli_address: [String],
+  firebaseToken: String,
+  metadata: {
+    latitude: String,
+    longitude: String,
+  },
 };
 const UserSchema = new Schema(schema, {
   timestamps: {

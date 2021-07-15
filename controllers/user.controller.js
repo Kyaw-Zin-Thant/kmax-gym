@@ -13,6 +13,10 @@ const {
   deleteUserService,
   updateAdminService,
   getBookingHistroyService,
+  saveFirebaseTokenService,
+  getNotificationService,
+  updateTrainerLocationService,
+  getTrainerLocationService,
 } = require('../services/user.service');
 exports.createUserController = async (req, res, next) => {
   let { email, password, userType = 'Member' } = req.body;
@@ -517,5 +521,50 @@ exports.getBookingHistroyController = async (req, res, next) => {
     res.json(response);
   } catch (error) {
     next(errro);
+  }
+};
+
+exports.saveFirebaseTokenController = async (req, res, next) => {
+  try {
+    const { userId } = req.headers;
+    const { firebaseToken } = req.body;
+    const response = await saveFirebaseTokenService({ userId, firebaseToken });
+    res.json(response);
+  } catch (error) {
+    next(errro);
+  }
+};
+exports.getNotificationController = async (req, res, next) => {
+  try {
+    const { userId } = req.headers;
+    const response = await getNotificationService({ userId });
+    res.json(response);
+  } catch (error) {
+    next(errro);
+  }
+};
+exports.updateTrainerLocationController = async (req, res, next) => {
+  try {
+    const { userId, userType } = req.headers;
+    const { latitude, longitude } = req.body;
+    const response = await updateTrainerLocationService({
+      userId,
+      latitude,
+      longitude,
+    });
+    res.json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getTrainerLocationController = async (req, res, next) => {
+  try {
+    const { trainerId } = req.params;
+    const response = await getTrainerLocationService({
+      trainerId,
+    });
+    res.json(response);
+  } catch (error) {
+    next(error);
   }
 };

@@ -5,7 +5,11 @@ var calcBmi = require('bmi-calc');
 const moment = require('moment');
 const mongoose = require('mongoose');
 const DietPlan = require('../models/diet.plan.model');
-
+const Notification = require('../models/notification.model');
+const { SendFirebaseMessage } = require('./firebase.messaging.service');
+// var FCM = require('fcm-node');
+// var serverKey = require('./firebase_kmax.json');
+// var fcm = new FCM(serverKey);
 const { ObjectId } = mongoose.Types;
 exports.getTrainerDetailService = async ({ trainerId }) => {
   try {
@@ -14,8 +18,8 @@ exports.getTrainerDetailService = async ({ trainerId }) => {
       let {
         username,
         dateOfBirth,
-        weight,
-        height,
+        weight = '0 lb',
+        height = '0 ft',
         gender,
         certificate = [],
         experience,
@@ -30,7 +34,6 @@ exports.getTrainerDetailService = async ({ trainerId }) => {
       let bmi, realweight, realheight;
       realweight = weight.split(' ');
       realheight = height.split(' ');
-      console.log(realheight[1]);
       realweight = realweight[1] == 'kg' ? realweight[0] * 2.2 : realweight[0];
       realheight =
         realheight[1] == 'cm' ? realheight[0] * 0.03 : realheight[0] * 12;
@@ -141,6 +144,32 @@ exports.bookingStatusUpdate = async ({ bookingId, status }) => {
     );
     const { userId, trainerId, startTime, endTime, techanics } = booking;
     let userbookingHis = await UserHistory.findOne({ userId });
+    let user = await User.findById(userId);
+    SendFirebaseMessage({
+      data: {
+        title: 'Your booking is ' + status,
+        body:
+          `Booking ${status} For ` +
+          moment(startTime).format('dddd, MMMM Do YYYY'),
+      },
+      notification: {
+        title: 'Your booking is ' + status,
+        body:
+          `Booking ${status} For ` +
+          moment(startTime).format('dddd, MMMM Do YYYY'),
+      },
+      to:
+        user.firebaseToken ||
+        'eUcMfDyVQh-bnV5lyC6OFE:APA91bF2CxZL_5fGFj8IBy7z7aHAaPpNVjdeO_iF2vOHLvqP5NK8zDfeKc2PLHf4aW80elJ8eZaPig1FeK6kYRF3G9AiWBmpdWzSJtdOKcPgwodFlXP6oBL5yFo91oCiBVnOWQarstNY',
+    });
+    await new Notification({
+      title: 'Your booking is ' + status,
+      body:
+        `Booking ${status} For ` +
+        moment(startTime).format('dddd, MMMM Do YYYY'),
+      to: user.userId,
+      type: 'booking',
+    }).save();
     if (userbookingHis && status == 'Accept') {
       const trainers = [
         ...userbookingHis.trainers,
@@ -149,6 +178,7 @@ exports.bookingStatusUpdate = async ({ bookingId, status }) => {
           startTime,
           endTime,
           techanics,
+          bookingId,
         },
       ];
       await UserHistory.findByIdAndUpdate(userbookingHis._id, { trainers });
@@ -161,11 +191,13 @@ exports.bookingStatusUpdate = async ({ bookingId, status }) => {
             startTime,
             endTime,
             techanics,
+            bookingId,
           },
         ],
       });
       await userbookingHis.save();
     }
+
     return { message: 'Successfully Updated' };
   } catch (error) {
     throw error;

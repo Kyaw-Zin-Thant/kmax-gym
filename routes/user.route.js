@@ -15,6 +15,10 @@ const {
   detailAdminController,
   deleteUserController,
   getBookingHistroyController,
+  saveFirebaseTokenController,
+  getNotificationController,
+  updateTrainerLocationController,
+  getTrainerLocationController,
 } = require('../controllers/user.controller');
 const router = express.Router();
 const baseURL = '/api/v1';
@@ -92,7 +96,17 @@ router.route(`${baseURL}/users/:userId`).delete(deleteUserController);
 router
   .route(`${baseURL}/users/bookings/history`)
   .get(getBookingHistroyController);
+router
+  .route(`${baseURL}/users/register/firebase`)
+  .post(saveFirebaseTokenController);
+router
+  .route(`${baseURL}/users/update/location`)
+  .post(updateTrainerLocationController);
 
+router.route(`${baseURL}/notifications`).get(getNotificationController);
+router
+  .route(`${baseURL}/booking/location/:trainerId`)
+  .get(getTrainerLocationController);
 exports.default = (app) => {
   app.use('/', router);
 };
