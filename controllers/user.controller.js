@@ -17,6 +17,7 @@ const {
   getNotificationService,
   updateTrainerLocationService,
   getTrainerLocationService,
+  addNewAddressService,
 } = require('../services/user.service');
 exports.createUserController = async (req, res, next) => {
   let { email, password, userType = 'Member' } = req.body;
@@ -562,6 +563,20 @@ exports.getTrainerLocationController = async (req, res, next) => {
     const { trainerId } = req.params;
     const response = await getTrainerLocationService({
       trainerId,
+    });
+    res.json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+exports.addNewAddressController = async (req, res, next) => {
+  try {
+    const { userId, userType } = req.headers;
+    const { newAddress } = req.body;
+    const response = await addNewAddressService({
+      userId,
+      userType,
+      newAddress,
     });
     res.json(response);
   } catch (error) {

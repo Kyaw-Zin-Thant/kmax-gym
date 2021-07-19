@@ -19,6 +19,7 @@ const {
   getNotificationController,
   updateTrainerLocationController,
   getTrainerLocationController,
+  addNewAddressController,
 } = require('../controllers/user.controller');
 const router = express.Router();
 const baseURL = '/api/v1';
@@ -107,6 +108,7 @@ router.route(`${baseURL}/notifications`).get(getNotificationController);
 router
   .route(`${baseURL}/booking/location/:trainerId`)
   .get(getTrainerLocationController);
+router.route(`${baseURL}/add/new_address`).post(addNewAddressController);
 exports.default = (app) => {
   app.use('/', router);
 };

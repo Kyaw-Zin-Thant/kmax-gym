@@ -636,7 +636,7 @@ exports.getBookingHistroyService = async ({ userId, userType }) => {
     if (userType == 'Trainer') {
       matchQuery = {
         $match: {
-          'trainers.userId': ObjectId(userId),
+          trainerId: ObjectId(userId),
         },
       };
     } else if (userType == 'Member') {
@@ -646,18 +646,12 @@ exports.getBookingHistroyService = async ({ userId, userType }) => {
         },
       };
     }
-    let result = await UserBookedTrainer.aggregate([
-      {
-        $unwind: {
-          path: '$trainers',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
+    let result = await UserBooking.aggregate([
       matchQuery,
       {
         $lookup: {
           from: 'users',
-          let: { trainerId: '$trainers.userId' },
+          let: { trainerId: '$trainerId' },
           pipeline: [
             {
               $match: {
@@ -726,9 +720,9 @@ exports.getBookingHistroyService = async ({ userId, userType }) => {
           member: 1,
           trainer: 1,
           status: 'Finished Training',
-          techanics: '$trainers.techanics',
-          startTime: '$trainers.startTime',
-          endTime: '$trainers.endTime',
+          techanics: '$techanics',
+          startTime: '$startTime',
+          endTime: '$endTime',
         },
       },
     ]);
@@ -784,6 +778,20 @@ exports.getTrainerLocationService = async ({ trainerId }) => {
     const { metadata } = trainer;
     const { latitude, longitude } = metadata;
     return { latitude, longitude };
+  } catch (error) {
+    throw error;
+  }
+};
+exports.addNewAddressService = async ({ userId, userType, newAddress }) => {
+  try {
+    let user = await User.findById(userId);
+    const { muli_address = [], address } = user;
+    muli_address.push(address);
+    await User.updateOne(
+      { _id: ObjectId(userId) },
+      { $set: { address: newAddress, muli_address } }
+    );
+    return { message: 'Successfully Updated' };
   } catch (error) {
     throw error;
   }

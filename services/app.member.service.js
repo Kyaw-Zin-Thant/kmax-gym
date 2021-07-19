@@ -62,6 +62,7 @@ exports.memberDetailInfoService = async ({ userId }) => {
         address,
         emergencyContact,
         medicalCheckUp,
+        muli_address,
       } = member;
       dateOfBirth = moment(new Date(dateOfBirth), 'DD-MM-YYYY');
       let bmi, realweight, realheight;
@@ -74,7 +75,7 @@ exports.memberDetailInfoService = async ({ userId }) => {
       bmi.value = bmi.value.toFixed(2);
       const { heartDisease, kneePain, backPain, broken, surgery, other } =
         medicalCheckUp;
-      console.log(medicalCheckUp);
+      muli_address.push(address);
       return {
         username,
         dateOfBirth,
@@ -94,6 +95,7 @@ exports.memberDetailInfoService = async ({ userId }) => {
         broken,
         surgery,
         other,
+        muli_address,
       };
     } else {
       return null;
