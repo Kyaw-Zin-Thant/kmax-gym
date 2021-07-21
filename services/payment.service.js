@@ -1,10 +1,11 @@
 const Payment = require('../models/payment.model');
+const Account = require('../models/account.model');
+
 const mongoose = require('mongoose');
 
 const { ObjectId } = mongoose.Types;
 exports.creatPaymentService = async ({
-  accountNo,
-  accountType,
+  accountId,
   amount,
   description,
   paytype,
@@ -15,8 +16,7 @@ exports.creatPaymentService = async ({
 }) => {
   try {
     await new Payment({
-      accountNo,
-      accountType,
+      accountId,
       amount,
       description,
       paytype,
@@ -31,8 +31,7 @@ exports.creatPaymentService = async ({
   }
 };
 exports.updatePaymentService = async ({
-  accountNo,
-  accountType,
+  accountId,
   amount,
   description,
   paytype,
@@ -46,8 +45,7 @@ exports.updatePaymentService = async ({
     await Payment.updateOne(
       { _id: ObjectId(paymentId) },
       {
-        accountNo,
-        accountType,
+        accountId,
         amount,
         description,
         paytype,
@@ -147,13 +145,13 @@ exports.getPaymentService = async ({
     if (sortColumn === 'accountNo') {
       sortQuery = {
         $sort: {
-          accountNo: sortDirection,
+          'account.accNo': sortDirection,
         },
       };
     } else if (sortColumn === 'accountType') {
       sortQuery = {
         $sort: {
-          accountType: sortDirection,
+          'account.accountType': sortDirection,
         },
       };
     } else if (sortColumn === 'createdDate') {
@@ -208,15 +206,46 @@ exports.getPaymentService = async ({
     const skip = parseInt(page, 10) - 1;
     limit = parseInt(limit, 10);
     let result = await Payment.aggregate([
+      {
+        $lookup: {
+          from: 'accounts',
+          let: { accountId: '$accountId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$_id', '$$accountId'],
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+                accNo: 1,
+                accountType: 1,
+              },
+            },
+          ],
+          as: 'account',
+        },
+      },
+      {
+        $unwind: {
+          path: '$account',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
       searchQuery,
       sortQuery,
       {
         $project: {
           _id: 0,
           paymentId: '$_id',
-          accountNo: 1,
-          accountType: 1,
+          accountNo: '$account.accNo',
+          accountType: '$account.accountType',
+          accountId: '$account._id',
           amount: 1,
+          currency: 1,
           description: 1,
           paytype: 1,
           status: 1,
@@ -244,6 +273,199 @@ exports.getPaymentService = async ({
     response.sortColumn = sortColumn;
     response.sortDirection = sortDirection === -1 ? 'desc' : 'asc';
     return response;
+  } catch (error) {
+    throw error;
+  }
+};
+exports.getAccountService = async ({
+  search,
+  page,
+  limit,
+  sortColumn,
+  sortDirection,
+}) => {
+  try {
+    let searchQuery = {
+      $match: {},
+    };
+    if (search) {
+      searchQuery = {
+        $match: {
+          $or: [
+            {
+              accNo: {
+                $regex: search,
+                $options: 'i',
+              },
+            },
+            {
+              accountType: {
+                $regex: search,
+                $options: 'i',
+              },
+            },
+            {
+              amount: {
+                $regex: search,
+                $options: 'i',
+              },
+            },
+            {
+              currency: {
+                $regex: search,
+                $options: 'i',
+              },
+            },
+            {
+              fee: {
+                $regex: search,
+                $options: 'i',
+              },
+            },
+          ],
+        },
+      };
+    }
+    sortDirection = sortDirection === 'desc' ? -1 : 1;
+    let sortQuery = {
+      $sort: {
+        createdDate: sortDirection,
+      },
+    };
+    if (sortColumn === 'createdDate') {
+      sortQuery = {
+        $sort: {
+          createdDate: sortDirection,
+        },
+      };
+    } else if (sortColumn === 'updatedDate') {
+      sortQuery = {
+        $sort: {
+          updatedDate: sortDirection,
+        },
+      };
+    } else if (sortColumn === 'accNO') {
+      sortQuery = {
+        $sort: {
+          accNO: sortDirection,
+        },
+      };
+    } else if (sortColumn === 'name') {
+      sortQuery = {
+        $sort: {
+          name: sortDirection,
+        },
+      };
+    } else if (sortColumn === 'fee') {
+      sortQuery = {
+        $sort: {
+          fee: sortDirection,
+        },
+      };
+    } else if (sortColumn === 'currency') {
+      sortQuery = {
+        $sort: {
+          currency: sortDirection,
+        },
+      };
+    } else if (sortColumn === 'amount') {
+      sortQuery = {
+        $sort: {
+          amount: sortDirection,
+        },
+      };
+    } else if (sortColumn === 'accountType') {
+      sortQuery = {
+        $sort: {
+          accountType: sortDirection,
+        },
+      };
+    }
+    const skip = parseInt(page, 10) - 1;
+    limit = parseInt(limit, 10);
+    let result = await Account.aggregate([
+      searchQuery,
+      sortQuery,
+      {
+        $project: {
+          _id: 0,
+          accountId: '$_id',
+          name: 1,
+          accNO: 1,
+          accountType: 1,
+          amount: 1,
+          currency: 1,
+          fee: 1,
+        },
+      },
+      {
+        $facet: {
+          accounts: [{ $skip: skip }, { $limit: limit }],
+          totalCount: [
+            {
+              $count: 'count',
+            },
+          ],
+        },
+      },
+    ]);
+    let response = {};
+    const { accounts, totalCount } = result[0];
+    response.accounts = accounts || [];
+    response.totalCount = totalCount[0] ? totalCount[0].count : 0;
+    response.sortColumn = sortColumn;
+    response.sortDirection = sortDirection === -1 ? 'desc' : 'asc';
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+exports.createAccountService = async ({
+  name,
+  accNo,
+  amount,
+  currency,
+  fee,
+  accountType,
+}) => {
+  try {
+    const account = new Account({
+      name,
+      accNo,
+      amount,
+      currency,
+      fee,
+      accountType,
+    });
+    await account.save();
+    return { message: 'Successfully created' };
+  } catch (error) {
+    throw error;
+  }
+};
+
+exports.updateAccountService = async ({
+  name,
+  accNo,
+  amount,
+  currency,
+  fee,
+  accountType,
+  accountId,
+}) => {
+  try {
+    await Account.findByIdAndUpdate(accountId, {
+      $set: { name, accNo, amount, currency, fee, accountType },
+    });
+    return { message: 'Successfully updated' };
+  } catch (error) {
+    throw error;
+  }
+};
+exports.deleteAccountService = async ({ accountId }) => {
+  try {
+    await Account.findByIdAndRemove(accountId);
+    return { message: 'Successfully deleted' };
   } catch (error) {
     throw error;
   }

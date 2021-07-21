@@ -5,10 +5,22 @@ const {
   createPaymentController,
   updatePaymentController,
   deletePaymentController,
+  getAccountController,
+  createAccountController,
+  updateAccountController,
+  deleteAccountController,
 } = require('../controllers/payment.controller');
 const router = express.Router();
 const baseURL = '/api/v1';
 
+router
+  .route(`${baseURL}/accounts`)
+  .get(getAccountController)
+  .post(createAccountController);
+router
+  .route(`${baseURL}/accounts/:accountId`)
+  .put(updateAccountController)
+  .delete(deleteAccountController);
 /**
  *
  * Create Payment Get

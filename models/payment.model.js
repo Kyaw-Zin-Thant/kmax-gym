@@ -3,13 +3,12 @@ const { Schema } = mongoose;
 const { ObjectId } = mongoose.Schema.Types;
 const schema = {
   createdUser: ObjectId,
-  amount: String,
+  amount: Number,
+  currency: String,
   payDate: {
     type: Date,
   },
-  paymentId: ObjectId,
-  accountNo: String,
-  accountType: String,
+  accountId: ObjectId,
   description: String,
   paytype: String,
   status: String,
