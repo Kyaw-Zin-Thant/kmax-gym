@@ -22,6 +22,7 @@ exports.createPaymentController = async (req, res, next) => {
       payAccount,
       payAccountType,
       userId,
+      currency,
     } = { ...req.body, ...req.headers };
     const response = await creatPaymentService({
       accountId,
@@ -32,6 +33,7 @@ exports.createPaymentController = async (req, res, next) => {
       payAccount,
       payAccountType,
       userId,
+      currency,
     });
     res.json(response);
   } catch (error) {
@@ -50,6 +52,7 @@ exports.updatePaymentController = async (req, res, next) => {
       payAccountType,
       userId,
       paymentId,
+      currency,
     } = { ...req.body, ...req.headers, ...req.params };
     const response = await updatePaymentService({
       accountId,
@@ -61,6 +64,7 @@ exports.updatePaymentController = async (req, res, next) => {
       payAccountType,
       userId,
       paymentId,
+      currency,
     });
     res.json(response);
   } catch (error) {
