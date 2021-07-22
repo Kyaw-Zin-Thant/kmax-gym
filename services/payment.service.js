@@ -245,7 +245,7 @@ exports.getPaymentService = async ({
           accountType: '$account.accountType',
           accountId: '$account._id',
           amount: 1,
-          currency: 1,
+          currency: { $cond: ['$currency', '$currency', 'MMK'] },
           description: 1,
           paytype: 1,
           status: 1,
