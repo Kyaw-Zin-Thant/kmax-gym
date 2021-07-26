@@ -16,6 +16,7 @@ const schema = {
       'Arrived',
     ],
   },
+  relative: [ObjectId],
   startTime: Date,
   endTime: Date,
   techanics: String,

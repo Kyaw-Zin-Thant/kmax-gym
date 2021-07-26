@@ -214,6 +214,24 @@ exports.updateTrainerProfileService = async ({ userId, file }) => {
     throw error;
   }
 };
+exports.updateTrainerEduAndExpService = async ({
+  userId,
+  experience,
+  certificate,
+}) => {
+  try {
+    let updateData = {};
+    experience
+      ? (updateData = { experience })
+      : certificate
+      ? (updateData = { certificate })
+      : '';
+    await User.findByIdAndUpdate(userId, updateData);
+    return { message: 'Successfully Updated' };
+  } catch (error) {
+    throw error;
+  }
+};
 exports.getDietPlanService = async () => {
   try {
     const result = await DietPlan.find(

@@ -464,6 +464,8 @@ exports.loginService = async ({ email, password }) => {
             userId: user._id,
             email: user.email,
             userType: user.userType,
+            doneMemberInfo: user.doneMemberInfo || false,
+            doneBodyInfo: user.doneBodyInfo || false,
           },
           token,
         };

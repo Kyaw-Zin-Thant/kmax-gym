@@ -65,6 +65,8 @@ const schema = {
   trainerCode: String,
   muli_address: [String],
   firebaseToken: String,
+  doneMemberInfo: Boolean,
+  doneBodyInfo: Boolean,
   metadata: {
     latitude: String,
     longitude: String,

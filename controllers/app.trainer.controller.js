@@ -5,6 +5,7 @@ const {
   updateTrainerProfileService,
   getDietPlanService,
   suggestMemberService,
+  updateTrainerEduAndExpService,
 } = require('../services/app.trainer.service');
 const { updateTrainerService } = require('../services/user.service');
 exports.getTrainerDetailController = async (req, res, next) => {
@@ -119,6 +120,21 @@ exports.suggestMemberController = async (req, res, next) => {
       calorie,
       dietPlans,
       bookingId,
+    });
+    res.status(200).send(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateTrainerEduAndExpController = async (req, res, next) => {
+  try {
+    const { experience, certificate } = req.body;
+    const { userId } = req.headers;
+    const response = await updateTrainerEduAndExpService({
+      userId,
+      experience,
+      certificate,
     });
     res.status(200).send(response);
   } catch (error) {

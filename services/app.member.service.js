@@ -23,7 +23,7 @@ exports.updatMemberInfoService = async ({
     address ? (updateData.address = address) : '';
     emergencyContact ? (updateData.emergencyContact = emergencyContact) : '';
     medicalCheckUp ? (updateData.medicalCheckUp = medicalCheckUp) : '';
-    console.log(updateData);
+    updateData.doneMemberInfo = true;
     await User.findByIdAndUpdate(memberId, updateData);
     return { message: 'Successfully Updated', memberId };
   } catch (error) {
@@ -38,6 +38,7 @@ exports.updatMemberInfoService = async ({
  */
 exports.updateMemberBodyInfoService = async ({ updateBody, memberId }) => {
   try {
+    updateBody.doneBodyInfo = true;
     await User.findByIdAndUpdate(memberId, updateBody);
     return { message: 'Successfully Updated', memberId };
   } catch (error) {
@@ -66,8 +67,8 @@ exports.memberDetailInfoService = async ({ userId }) => {
       } = member;
       dateOfBirth = moment(new Date(dateOfBirth), 'DD-MM-YYYY');
       let bmi, realweight, realheight;
-      realweight = weight.split(' ');
-      realheight = height.split(' ');
+      realweight = weight ? weight.split(' ') : '0kg';
+      realheight = height ? height.split(' ') : '0ft';
       realweight = realweight[1] == 'kg' ? realweight[0] * 2.2 : realweight[0];
       realheight =
         realheight[1] == 'cm' ? realheight[0] * 0.03 : realheight[0] * 12;
@@ -75,7 +76,7 @@ exports.memberDetailInfoService = async ({ userId }) => {
       bmi.value = bmi.value.toFixed(2);
       const { heartDisease, kneePain, backPain, broken, surgery, other } =
         medicalCheckUp;
-      muli_address.push(address);
+      address ? muli_address.push(address) : '';
       return {
         username,
         dateOfBirth,
@@ -111,6 +112,7 @@ exports.bookingService = async ({
   selectedTime,
   techanics,
   count = 1,
+  relative = [],
 }) => {
   try {
     let formatDate = moment(startDate).format('YYYY-MM-DD');
@@ -128,6 +130,7 @@ exports.bookingService = async ({
       endTime: endDate,
       techanics,
       count,
+      relative,
     });
     const result = await Promise.all([
       userBooking.save(),

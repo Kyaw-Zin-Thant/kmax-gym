@@ -94,7 +94,14 @@ exports.memberDetailInfoController = async (req, res, next) => {
 exports.bookingController = async (req, res, next) => {
   try {
     const { userId } = req.headers;
-    const { trainerId, startDate, selectedTime, techanics, count } = req.body;
+    const {
+      trainerId,
+      startDate,
+      selectedTime,
+      techanics,
+      count,
+      relative = [],
+    } = req.body;
     const response = await bookingService({
       userId,
       trainerId,
@@ -102,6 +109,7 @@ exports.bookingController = async (req, res, next) => {
       selectedTime,
       techanics,
       count,
+      relative,
     });
     res.json(response);
   } catch (error) {
