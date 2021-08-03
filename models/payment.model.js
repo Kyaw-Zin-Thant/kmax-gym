@@ -5,6 +5,7 @@ const schema = {
   createdUser: ObjectId,
   amount: Number,
   currency: String,
+  payUserId: ObjectId,
   payDate: {
     type: Date,
   },

@@ -14,6 +14,7 @@ exports.creatPaymentService = async ({
   payAccountType,
   userId,
   currency = 'MMK',
+  payUserId,
 }) => {
   try {
     await new Payment({
@@ -26,6 +27,7 @@ exports.creatPaymentService = async ({
       payAccountType,
       createdUser: userId,
       currency,
+      payUserId,
     }).save();
     return { message: 'Succesfully Created' };
   } catch (error) {
@@ -43,6 +45,7 @@ exports.updatePaymentService = async ({
   userId,
   paymentId,
   currency = 'MMK',
+  payUserId,
 }) => {
   try {
     await Payment.updateOne(
@@ -57,6 +60,7 @@ exports.updatePaymentService = async ({
         payAccountType,
         createdUser: userId,
         currency,
+        payUserId,
       }
     );
     return { message: 'Succesfully Updated' };
