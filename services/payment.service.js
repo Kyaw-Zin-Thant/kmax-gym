@@ -265,12 +265,12 @@ exports.getPaymentService = async ({
               },
             },
           ],
-          as: 'trainer',
+          as: 'payUser',
         },
       },
       {
         $unwind: {
-          path: '$trainer',
+          path: '$payUser',
           preserveNullAndEmptyArrays: true,
         },
       },
