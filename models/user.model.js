@@ -71,6 +71,27 @@ const schema = {
     latitude: String,
     longitude: String,
   },
+  weight_comparison: [
+    {
+      weight: String,
+      neck: String,
+      chest: String,
+      belly: String,
+      ass: String,
+      right_arm: String,
+      left_arm: String,
+      right_hand: String,
+      left_hand: String,
+      right_thigh: String,
+      left_thigh: String,
+      right_crural: String,
+      left_crural: String,
+      createDate: {
+        type: Date,
+        default: Date.now(),
+      },
+    },
+  ],
 };
 const UserSchema = new Schema(schema, {
   timestamps: {

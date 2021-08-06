@@ -485,14 +485,13 @@ exports.loginService = async ({ email, password }) => {
   }
 };
 
-exports.getUserHomeService = async ({ userId }) => {
+exports.getUserHomeService = async ({ userId, bookingDate }) => {
   try {
-    let startDate = new Date();
-    let endDate = new Date();
-    startDate.setHours(0, 0, 0, 0);
-    endDate.setHours(23, 59, 59, 59);
-    console.log(startDate);
-    console.log(endDate);
+    bookingDate = new Date(bookingDate);
+    let startDate = new Date(bookingDate.setHours(0, 0, 0, 0));
+    let endDate = new Date(bookingDate.setHours(23, 59, 59, 59));
+    console.log(startDate, 'startDate');
+    console.log(endDate, 'startDate');
 
     let result = await Promise.all([
       UserBooking.aggregate([

@@ -25,6 +25,21 @@ const schema = {
     burnCalorie: Number,
     dietPlans: [ObjectId],
   },
+  weightComparison: {
+    weight: String,
+    neck: String,
+    chest: String,
+    belly: String,
+    ass: String,
+    right_arm: String,
+    left_arm: String,
+    right_hand: String,
+    left_hand: String,
+    right_thigh: String,
+    left_thigh: String,
+    right_crural: String,
+    left_crural: String,
+  },
 };
 const UserApplyTrainerSchema = new Schema(schema, {
   timestamps: {

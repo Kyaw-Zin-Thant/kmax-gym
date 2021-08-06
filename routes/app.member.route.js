@@ -9,6 +9,7 @@ const {
   updateMemberBodyInfo,
   memberDetailInfoController,
   bookingController,
+  getMemberWeightNoteController,
 } = require('../controllers/app.member.controller');
 const router = express.Router();
 const baseURL = '/api/v1';
@@ -69,6 +70,9 @@ router.route(`${baseURL}/users/members/detail`).get(memberDetailInfoController);
  * Member booking
  */
 router.route(`${baseURL}/users/members/booking`).post(bookingController);
+router
+  .route(`${baseURL}/member-booking/weight-comparison`)
+  .get(getMemberWeightNoteController);
 
 exports.default = (app) => {
   app.use('/', router);

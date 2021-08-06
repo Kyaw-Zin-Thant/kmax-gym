@@ -13,6 +13,7 @@ const {
   getDietPlanController,
   suggestMemberController,
   updateTrainerEduAndExpController,
+  memberWeightNoteController,
 } = require('../controllers/app.trainer.controller');
 const router = express.Router();
 const baseURL = '/api/v1';
@@ -80,6 +81,9 @@ router.route(`${baseURL}/diet-plans`).get(getDietPlanController);
 router
   .route(`${baseURL}/suggest-member/:bookingId`)
   .put(suggestMemberController);
+router
+  .route(`${baseURL}/weight-notes/:bookingId`)
+  .post(memberWeightNoteController);
 router
   .route(`${baseURL}/users/trainers/update/edu-exp`)
   .put(updateTrainerEduAndExpController);

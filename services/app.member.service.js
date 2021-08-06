@@ -168,3 +168,12 @@ exports.bookingService = async ({
     throw error;
   }
 };
+exports.getMemberWeightNoteServices = async ({ userId }) => {
+  try {
+    const user = await User.findById(userId);
+    const { weight_comparison = [] } = user;
+    return { weight_comparison };
+  } catch (error) {
+    throw error;
+  }
+};

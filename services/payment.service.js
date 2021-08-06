@@ -228,7 +228,8 @@ exports.getPaymentService = async ({
             },
             {
               $project: {
-                _id: 1,
+                _id: 0,
+                accountId: '$_id',
                 accNo: 1,
                 accountType: 1,
               },
@@ -243,6 +244,36 @@ exports.getPaymentService = async ({
           preserveNullAndEmptyArrays: true,
         },
       },
+      {
+        $lookup: {
+          from: 'users',
+          let: { payUserId: '$payUserId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$_id', '$$payUserId'],
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                userId: '$_id',
+                username: 1,
+                email: 1,
+              },
+            },
+          ],
+          as: 'trainer',
+        },
+      },
+      {
+        $unwind: {
+          path: '$trainer',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
       searchQuery,
       sortQuery,
       {
@@ -252,6 +283,8 @@ exports.getPaymentService = async ({
           accountNo: '$account.accNo',
           accountType: '$account.accountType',
           accountId: '$account._id',
+          account: 1,
+          trainer: 1,
           amount: 1,
           currency: { $cond: ['$currency', '$currency', 'MMK'] },
           description: 1,

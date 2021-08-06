@@ -260,3 +260,72 @@ exports.suggestMemberService = async ({ calorie, dietPlans, bookingId }) => {
     throw error;
   }
 };
+exports.memberWeightNoteService = async ({
+  weight,
+  neck,
+  chest,
+  belly,
+  ass,
+  right_arm,
+  left_arm,
+  right_hand,
+  left_hand,
+  right_thigh,
+  left_thigh,
+  right_crural,
+  left_crural,
+  userId,
+  bookingId,
+}) => {
+  try {
+    await Promise.all(
+      TrainerBooking.updateOne(
+        { _id: ObjectId(bookingId) },
+        {
+          $set: {
+            weight_comparison: {
+              weight,
+              neck,
+              chest,
+              belly,
+              ass,
+              right_arm,
+              left_arm,
+              right_hand,
+              left_hand,
+              right_thigh,
+              left_thigh,
+              right_crural,
+              left_crural,
+            },
+          },
+        }
+      ),
+      User.updateOne(
+        { _id: ObjectId(userId) },
+        {
+          $push: {
+            weight_comparison: {
+              weight,
+              neck,
+              chest,
+              belly,
+              ass,
+              right_arm,
+              left_arm,
+              right_hand,
+              left_hand,
+              right_thigh,
+              left_thigh,
+              right_crural,
+              left_crural,
+            },
+          },
+        }
+      )
+    );
+    return { message: 'Successfully updated' };
+  } catch (error) {
+    throw error;
+  }
+};

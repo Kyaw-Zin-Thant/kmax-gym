@@ -6,6 +6,7 @@ const {
   getDietPlanService,
   suggestMemberService,
   updateTrainerEduAndExpService,
+  memberWeightNoteService,
 } = require('../services/app.trainer.service');
 const { updateTrainerService } = require('../services/user.service');
 exports.getTrainerDetailController = async (req, res, next) => {
@@ -135,6 +136,45 @@ exports.updateTrainerEduAndExpController = async (req, res, next) => {
       userId,
       experience,
       certificate,
+    });
+    res.status(200).send(response);
+  } catch (error) {
+    next(error);
+  }
+};
+exports.memberWeightNoteController = async (req, res, next) => {
+  try {
+    const {
+      weight,
+      neck,
+      chest,
+      belly,
+      ass,
+      right_arm,
+      left_arm,
+      right_hand,
+      left_hand,
+      right_thigh,
+      left_thigh,
+      right_crural,
+      left_crural,
+      userId,
+    } = req.body;
+    const response = await memberWeightNoteService({
+      weight,
+      neck,
+      chest,
+      belly,
+      ass,
+      right_arm,
+      left_arm,
+      right_hand,
+      left_hand,
+      right_thigh,
+      left_thigh,
+      right_crural,
+      left_crural,
+      userId,
     });
     res.status(200).send(response);
   } catch (error) {

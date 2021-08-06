@@ -3,6 +3,7 @@ const {
   updateMemberBodyInfoService,
   memberDetailInfoService,
   bookingService,
+  getMemberWeightNoteServices,
 } = require('../services/app.member.service');
 /**
  * After acc sign up update user info
@@ -111,6 +112,15 @@ exports.bookingController = async (req, res, next) => {
       count,
       relative,
     });
+    res.json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getMemberWeightNoteController = async (req, res, next) => {
+  try {
+    const { userId } = req.headers;
+    const response = await getMemberWeightNoteServices({ userId });
     res.json(response);
   } catch (error) {
     next(error);
