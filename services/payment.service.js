@@ -284,7 +284,7 @@ exports.getPaymentService = async ({
           accountType: '$account.accountType',
           accountId: '$account._id',
           account: 1,
-          trainer: 1,
+          payUser: 1,
           amount: 1,
           currency: { $cond: ['$currency', '$currency', 'MMK'] },
           description: 1,
