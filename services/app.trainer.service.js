@@ -6,6 +6,7 @@ const moment = require('moment');
 const mongoose = require('mongoose');
 const DietPlan = require('../models/diet.plan.model');
 const Notification = require('../models/notification.model');
+const Payment = require('../models/payment.model');
 const { SendFirebaseMessage } = require('./firebase.messaging.service');
 // var FCM = require('fcm-node');
 // var serverKey = require('./firebase_kmax.json');
@@ -13,7 +14,59 @@ const { SendFirebaseMessage } = require('./firebase.messaging.service');
 const { ObjectId } = mongoose.Types;
 exports.getTrainerDetailService = async ({ trainerId }) => {
   try {
-    const trainer = await User.findById(trainerId);
+    const result = await Promise.all([
+      User.findById(trainerId),
+      Payment.find({ payUserId: ObjectId(trainerId) }),
+      TrainerBooking.aggregate([
+        {
+          $match: {
+            trainerId: ObjectId(trainerId),
+          },
+        },
+        {
+          $lookup: {
+            from: 'users',
+            let: { userId: '$userId' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ['$_id', '$$userId'],
+                  },
+                },
+              },
+              {
+                $project: {
+                  _id: 0,
+                  username: 1,
+                  image: 1,
+                },
+              },
+            ],
+            as: 'member',
+          },
+        },
+        {
+          $unwind: {
+            path: '$member',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            rating: 1,
+            feedback: '$review',
+            userName: '$member.username',
+            date: '$updatedDate',
+            imageUrl: '$member.image',
+          },
+        },
+      ]),
+    ]);
+    const trainer = result[0];
+    let wallet = result[1].map((val) => parseInt(val.amount));
+    wallet = wallet.reduce((a, b) => a + b, 0);
     if (trainer) {
       let {
         username,
@@ -56,6 +109,8 @@ exports.getTrainerDetailService = async ({ trainerId }) => {
         techanics,
         description,
         image,
+        wallet: wallet + '',
+        feedbackList: result[2],
       };
     } else {
       return null;
@@ -69,7 +124,6 @@ exports.getTrainerBookingService = async ({ date, trainerId }) => {
     let findDate = new Date(date);
     const startTime = new Date(findDate.setHours(0, 0, 0, 0));
     const endTime = new Date(findDate.setHours(23, 59, 59, 59));
-    console.log(startTime, endTime);
     let result = await TrainerBooking.aggregate([
       {
         $match: {
@@ -126,6 +180,7 @@ exports.getTrainerBookingService = async ({ date, trainerId }) => {
           techanics: 1,
           startTime: 1,
           endTime: 1,
+          weight_comparison: 1,
         },
       },
     ]);
@@ -167,7 +222,7 @@ exports.bookingStatusUpdate = async ({ bookingId, status }) => {
       body:
         `Booking ${status} For ` +
         moment(startTime).format('dddd, MMMM Do YYYY'),
-      to: user.userId,
+      to: user._id,
       type: 'booking',
     }).save();
     if (userbookingHis && status == 'Accept') {
@@ -274,11 +329,12 @@ exports.memberWeightNoteService = async ({
   left_thigh,
   right_crural,
   left_crural,
-  userId,
   bookingId,
 }) => {
   try {
-    await Promise.all(
+    const booking = await TrainerBooking.findById(bookingId);
+    console.log(booking);
+    await Promise.all([
       TrainerBooking.updateOne(
         { _id: ObjectId(bookingId) },
         {
@@ -302,7 +358,7 @@ exports.memberWeightNoteService = async ({
         }
       ),
       User.updateOne(
-        { _id: ObjectId(userId) },
+        { _id: booking.userId },
         {
           $push: {
             weight_comparison: {
@@ -322,10 +378,11 @@ exports.memberWeightNoteService = async ({
             },
           },
         }
-      )
-    );
+      ),
+    ]);
     return { message: 'Successfully updated' };
   } catch (error) {
+    console.log(error);
     throw error;
   }
 };

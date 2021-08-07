@@ -158,8 +158,9 @@ exports.memberWeightNoteController = async (req, res, next) => {
       left_thigh,
       right_crural,
       left_crural,
-      userId,
     } = req.body;
+    const { bookingId } = req.params;
+    console.log(req.body);
     const response = await memberWeightNoteService({
       weight,
       neck,
@@ -174,7 +175,7 @@ exports.memberWeightNoteController = async (req, res, next) => {
       left_thigh,
       right_crural,
       left_crural,
-      userId,
+      bookingId,
     });
     res.status(200).send(response);
   } catch (error) {

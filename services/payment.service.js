@@ -17,18 +17,24 @@ exports.creatPaymentService = async ({
   payUserId,
 }) => {
   try {
-    await new Payment({
-      accountId,
-      amount,
-      description,
-      paytype,
-      status,
-      payAccount,
-      payAccountType,
-      createdUser: userId,
-      currency,
-      payUserId,
-    }).save();
+    const account = await Account.findById(accountId);
+    const accountAmount =
+      paytype == 'Income' ? account.amount + amount : account.amount - amount;
+    await Promise.all([
+      new Payment({
+        accountId,
+        amount,
+        description,
+        paytype,
+        status,
+        payAccount,
+        payAccountType,
+        createdUser: userId,
+        currency,
+        payUserId,
+      }).save(),
+      Account.findByIdAndUpdate(accountId, { $set: { amount: accountAmount } }),
+    ]);
     return { message: 'Succesfully Created' };
   } catch (error) {
     throw error;
@@ -48,21 +54,27 @@ exports.updatePaymentService = async ({
   payUserId,
 }) => {
   try {
-    await Payment.updateOne(
-      { _id: ObjectId(paymentId) },
-      {
-        accountId,
-        amount,
-        description,
-        paytype,
-        status,
-        payAccount,
-        payAccountType,
-        createdUser: userId,
-        currency,
-        payUserId,
-      }
-    );
+    const account = await Account.findById(accountId);
+    const accountAmount =
+      paytype == 'Income' ? account.amount + amount : account.amount - amount;
+    awaitPromise.all([
+      Payment.updateOne(
+        { _id: ObjectId(paymentId) },
+        {
+          accountId,
+          amount,
+          description,
+          paytype,
+          status,
+          payAccount,
+          payAccountType,
+          createdUser: userId,
+          currency,
+          payUserId,
+        }
+      ),
+      Account.findByIdAndUpdate(accountId, { $set: { amount: accountAmount } }),
+    ]);
     return { message: 'Succesfully Updated' };
   } catch (error) {
     throw error;

@@ -177,3 +177,13 @@ exports.getMemberWeightNoteServices = async ({ userId }) => {
     throw error;
   }
 };
+exports.reviewAndRatingServices = async ({ bookingId, review, rating }) => {
+  try {
+    await UserBooking.findByIdAndUpdate(bookingId, {
+      $set: { review, rating },
+    });
+    return { message: 'Successfully Updated' };
+  } catch (error) {
+    throw error;
+  }
+};

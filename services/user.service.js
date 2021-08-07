@@ -555,6 +555,31 @@ exports.getUserHomeService = async ({ userId, bookingDate }) => {
           },
         },
         {
+          $lookup: {
+            from: 'diet_plans',
+            let: { dietPlans: '$suggestion.dietPlans' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $in: ['$_id', '$$dietPlans'],
+                  },
+                },
+              },
+              {
+                $project: {
+                  _id: 1,
+                  type: 1,
+                  name: 1,
+                  image: 1,
+                  calorie: 1,
+                },
+              },
+            ],
+            as: 'dietPlan',
+          },
+        },
+        {
           $project: {
             _id: 1,
             bookId: '$_id',
@@ -563,6 +588,11 @@ exports.getUserHomeService = async ({ userId, bookingDate }) => {
             endTime: '$endTime',
             trainer: 1,
             status: 1,
+            weight_comparison: 1,
+            suggestion: {
+              burnCalorie: '$suggestion.burnCalorie',
+              dietPlans: '$dietPlan',
+            },
           },
         },
       ]),
@@ -720,13 +750,15 @@ exports.getBookingHistroyService = async ({ userId, userType }) => {
           bookingId: '$_id',
           member: 1,
           trainer: 1,
-          status: 'Finished Training',
+          status: 1,
           techanics: '$techanics',
           startTime: '$startTime',
           endTime: '$endTime',
+          weight_comparison: 1,
         },
       },
     ]);
+    console.log(JSON.stringify(result) + ' gggg ggg g');
     return result;
   } catch (error) {
     throw error;
