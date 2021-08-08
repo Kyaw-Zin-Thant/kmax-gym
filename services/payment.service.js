@@ -57,7 +57,7 @@ exports.updatePaymentService = async ({
     const account = await Account.findById(accountId);
     const accountAmount =
       paytype == 'Income' ? account.amount + amount : account.amount - amount;
-    awaitPromise.all([
+    await Promise.all([
       Payment.updateOne(
         { _id: ObjectId(paymentId) },
         {
@@ -242,6 +242,7 @@ exports.getPaymentService = async ({
               $project: {
                 _id: 0,
                 accountId: '$_id',
+                name: 1,
                 accNo: 1,
                 accountType: 1,
               },
