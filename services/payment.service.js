@@ -1,5 +1,7 @@
 const Payment = require('../models/payment.model');
 const Account = require('../models/account.model');
+const Fee = require('../models/fee.model');
+const User = require('../models/user.model');
 
 const mongoose = require('mongoose');
 
@@ -15,26 +17,57 @@ exports.creatPaymentService = async ({
   userId,
   currency = 'MMK',
   payUserId,
+  feeId = '',
 }) => {
   try {
     const account = await Account.findById(accountId);
+    let fee, noOfDay;
+    if (feeId) {
+      fee = await Fee.findById(feeId);
+      noOfDay = fee.noOfDay * (amount / fee.amount);
+    }
     const accountAmount =
       paytype == 'Income' ? account.amount + amount : account.amount - amount;
-    await Promise.all([
-      new Payment({
-        accountId,
-        amount,
-        description,
-        paytype,
-        status,
-        payAccount,
-        payAccountType,
-        createdUser: userId,
-        currency,
-        payUserId,
-      }).save(),
-      Account.findByIdAndUpdate(accountId, { $set: { amount: accountAmount } }),
-    ]);
+    feeId
+      ? await Promise.all([
+          new Payment({
+            accountId,
+            amount,
+            description,
+            paytype,
+            status,
+            payAccount,
+            payAccountType,
+            createdUser: userId,
+            currency,
+            payUserId,
+          }).save(),
+          Account.findByIdAndUpdate(accountId, {
+            $set: { amount: accountAmount },
+          }),
+          User.findByIdAndUpdate(userId, {
+            $set: {
+              metadata: { noOfDays, status: 'Pending' },
+            },
+          }),
+        ])
+      : await Promise.all([
+          new Payment({
+            accountId,
+            amount,
+            description,
+            paytype,
+            status,
+            payAccount,
+            payAccountType,
+            createdUser: userId,
+            currency,
+            payUserId,
+          }).save(),
+          Account.findByIdAndUpdate(accountId, {
+            $set: { amount: accountAmount },
+          }),
+        ]);
     return { message: 'Succesfully Created' };
   } catch (error) {
     throw error;
@@ -337,11 +370,14 @@ exports.getAccountService = async ({
   limit,
   sortColumn,
   sortDirection,
+  fee,
 }) => {
   try {
     let searchQuery = {
       $match: {},
     };
+    let feeQuery = { $match: {} };
+    fee ? (feeQuery = { $match: { fee: fee == 'True' } }) : '';
     if (search) {
       searchQuery = {
         $match: {
@@ -439,6 +475,7 @@ exports.getAccountService = async ({
     limit = parseInt(limit, 10);
     let result = await Account.aggregate([
       searchQuery,
+      feeQuery,
       sortQuery,
       {
         $project: {

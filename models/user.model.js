@@ -70,6 +70,8 @@ const schema = {
   metadata: {
     latitude: String,
     longitude: String,
+    noOfDays: String,
+    status: String,
   },
   weight_comparison: [
     {

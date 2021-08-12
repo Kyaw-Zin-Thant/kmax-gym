@@ -8,6 +8,7 @@ exports.creatFeeService = async ({
   amount,
   currency,
   noOfUser,
+  noOfDay,
   description,
 }) => {
   try {
@@ -17,6 +18,7 @@ exports.creatFeeService = async ({
       currency,
       noOfUser,
       description,
+      noOfDay,
     }).save();
     return { message: 'Succesfully Created' };
   } catch (error) {
@@ -28,6 +30,7 @@ exports.updateFeeService = async ({
   amount,
   currency,
   noOfUser,
+  noOfDay,
   description,
   feeId,
 }) => {
@@ -40,6 +43,7 @@ exports.updateFeeService = async ({
         currency,
         noOfUser,
         description,
+        noOfDay,
       }
     );
     return { message: 'Succesfully Updated' };
@@ -67,6 +71,7 @@ exports.detailFeeService = async ({ feeId }) => {
         description: 1,
         name: 1,
         noOfUser: 1,
+        noOfDay: 1,
       }
     );
     return fee;

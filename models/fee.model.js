@@ -6,6 +6,10 @@ const schema = {
   amount: Number,
   currency: String,
   noOfUser: Number,
+  noOfDay: {
+    type: String,
+    default: '1',
+  },
   description: String,
 };
 const FeeSchema = new Schema(schema, {

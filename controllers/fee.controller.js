@@ -10,7 +10,7 @@ const {
  */
 exports.createFeeController = async (req, res, next) => {
   try {
-    const { name, amount, currency, noOfUser, description } = {
+    const { name, amount, currency, noOfUser, description, noOfDay } = {
       ...req.body,
       ...req.headers,
     };
@@ -20,6 +20,7 @@ exports.createFeeController = async (req, res, next) => {
       currency,
       noOfUser,
       description,
+      noOfDay,
     });
     res.json(response);
   } catch (error) {
@@ -28,7 +29,7 @@ exports.createFeeController = async (req, res, next) => {
 };
 exports.updateFeeController = async (req, res, next) => {
   try {
-    const { name, amount, currency, noOfUser, description, feeId } = {
+    const { name, amount, currency, noOfUser, description, feeId, noOfDay } = {
       ...req.body,
       ...req.headers,
       ...req.params,
@@ -40,6 +41,7 @@ exports.updateFeeController = async (req, res, next) => {
       noOfUser,
       description,
       feeId,
+      noOfDay,
     });
     res.json(response);
   } catch (error) {

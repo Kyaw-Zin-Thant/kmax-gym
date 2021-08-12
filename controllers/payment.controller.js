@@ -18,7 +18,7 @@ exports.createPaymentController = async (req, res, next) => {
       amount,
       description,
       paytype,
-      status,
+      status = 'Pending',
       payAccount,
       payAccountType,
       userId,
@@ -113,6 +113,7 @@ exports.getAccountController = async (req, res, next) => {
       limit = '10',
       sortColumn = 'createdDate',
       sortDirection = 'desc',
+      fee = '',
     } = req.query;
     let response = await getAccountService({
       search,
@@ -120,6 +121,7 @@ exports.getAccountController = async (req, res, next) => {
       limit,
       sortColumn,
       sortDirection,
+      fee,
     });
     res.status(200).json(response);
   } catch (error) {
