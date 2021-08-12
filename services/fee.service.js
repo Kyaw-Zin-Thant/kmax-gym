@@ -186,6 +186,7 @@ exports.getFeeService = async ({
           description: 1,
           name: 1,
           noOfUser: 1,
+          noOfDay: 1,
           createdDate: 1,
           updatedDate: 1,
         },
