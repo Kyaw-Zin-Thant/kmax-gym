@@ -482,7 +482,7 @@ exports.getAccountService = async ({
           _id: 0,
           accountId: '$_id',
           name: 1,
-          accNO: 1,
+          accNO: { $cond: ['$accNo', '$accNo', ''] },
           accountType: 1,
           amount: 1,
           currency: 1,
