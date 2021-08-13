@@ -20,6 +20,8 @@ const {
   updateTrainerLocationController,
   getTrainerLocationController,
   addNewAddressController,
+  changePasswordController,
+  updateAddressController,
 } = require('../controllers/user.controller');
 const router = express.Router();
 const baseURL = '/api/v1';
@@ -62,6 +64,8 @@ var getRandomString = function () {
   return Math.random().toString(36).substring(2) + Date.now();
 };
 router.route(`${baseURL}/users`).get(getUserController);
+router.route(`${baseURL}/users/change-password`).post(changePasswordController);
+
 /**
  * user login
  */
@@ -109,6 +113,8 @@ router
   .route(`${baseURL}/booking/location/:trainerId`)
   .get(getTrainerLocationController);
 router.route(`${baseURL}/add/new_address`).post(addNewAddressController);
+router.route(`${baseURL}/update/update_address`).put(updateAddressController);
+
 exports.default = (app) => {
   app.use('/', router);
 };

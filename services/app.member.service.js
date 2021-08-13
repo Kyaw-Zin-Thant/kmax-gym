@@ -24,6 +24,7 @@ exports.updatMemberInfoService = async ({
     emergencyContact ? (updateData.emergencyContact = emergencyContact) : '';
     medicalCheckUp ? (updateData.medicalCheckUp = medicalCheckUp) : '';
     updateData.doneMemberInfo = true;
+    console.log(updateData);
     await User.findByIdAndUpdate(memberId, updateData);
     return { message: 'Successfully Updated', memberId };
   } catch (error) {
@@ -77,6 +78,8 @@ exports.memberDetailInfoService = async ({ userId }) => {
       const { heartDisease, kneePain, backPain, broken, surgery, other } =
         medicalCheckUp;
       address ? muli_address.push(address) : '';
+      console.log('user address ' + address);
+      muli_address = [...new Set(muli_address)];
       return {
         username,
         dateOfBirth,
@@ -116,8 +119,14 @@ exports.bookingService = async ({
 }) => {
   try {
     let formatDate = moment(startDate).format('YYYY-MM-DD');
-    const startTime = selectedTime == 1 ? '7:30 AM' : '12:00 AM';
-    const endTime = selectedTime == 1 ? '9:00 AM' : '1:30 AM';
+    const startTime =
+      selectedTime == 1
+        ? '7:30 AM'
+        : selectedTime == 2
+        ? '12:00 PM'
+        : '2:00 PM';
+    const endTime =
+      selectedTime == 1 ? '9:00 AM' : selectedTime == 2 ? '1:30 PM' : '3:30 PM';
 
     startDate = new Date(formatDate + ' ' + startTime);
     let endDate = new Date(formatDate + ' ' + endTime);

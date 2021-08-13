@@ -255,6 +255,7 @@ exports.getUserService = async ({
           updatedDate: 1,
           weight: { $cond: ['$weight', '$weight', ''] },
           height: { $cond: ['$height', '$height', ''] },
+          image: 1,
           // age: {
           //   $divide: [
           //     {
@@ -828,6 +829,50 @@ exports.addNewAddressService = async ({ userId, userType, newAddress }) => {
   } catch (error) {
     throw error;
   }
+};
+exports.updateAddressService = async ({ userId, address }) => {
+  try {
+    let user = await User.findById(userId);
+    const { muli_address = [] } = user;
+    muli_address.push(address);
+    await User.updateOne(
+      { _id: ObjectId(userId) },
+      {
+        $set: {
+          address,
+          muli_address,
+        },
+      }
+    );
+    return { message: 'Successfully Updated' };
+  } catch (error) {
+    throw error;
+  }
+};
+exports.changePasswordService = async ({
+  currentPassword,
+  newPassword,
+  userId,
+}) => {
+  try {
+    const user = await User.findById(userId);
+    if (user) {
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (isMatch) {
+        newPassword = await updateHash(newPassword);
+        await User.findByIdAndUpdate(userId, {
+          $set: { password: newPassword },
+        });
+        return { message: 'Successfully Updated' };
+      } else {
+        let passwordWrong = new Error('Password is wrong.');
+        passwordWrong.status = 400;
+        throw passwordWrong;
+      }
+    } else {
+      return { message: 'Successfully Updated' };
+    }
+  } catch (error) {}
 };
 Date.prototype.addHours = function (h) {
   this.setHours(this.getHours() + h);

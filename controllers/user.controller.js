@@ -1,6 +1,7 @@
 const fs = require('fs');
 const Jimp = require('jimp');
 const path = require('path');
+const { updatePaymentService } = require('../services/payment.service');
 const {
   createUserService,
   getUserService,
@@ -18,6 +19,8 @@ const {
   updateTrainerLocationService,
   getTrainerLocationService,
   addNewAddressService,
+  changePasswordService,
+  updateAddressService,
 } = require('../services/user.service');
 exports.createUserController = async (req, res, next) => {
   let { email, password, userType = 'Member' } = req.body;
@@ -423,6 +426,34 @@ exports.addNewAddressController = async (req, res, next) => {
       userId,
       userType,
       newAddress,
+    });
+    res.json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+exports.updateAddressController = async (req, res, next) => {
+  try {
+    const { userId, userType } = req.headers;
+    const { address } = req.body;
+    const response = await updateAddressService({
+      userId,
+      userType,
+      address,
+    });
+    res.json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+exports.changePasswordController = async (req, res, next) => {
+  try {
+    const { userId } = req.headers;
+    const { newPassword, currentPassword } = req.body;
+    const response = await changePasswordService({
+      userId,
+      newPassword,
+      currentPassword,
     });
     res.json(response);
   } catch (error) {
