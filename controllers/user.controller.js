@@ -361,7 +361,7 @@ exports.deleteUserController = async (req, res, next) => {
     const response = await deleteUserService({ userId });
     res.json(response);
   } catch (error) {
-    next(errro);
+    next(error);
   }
 };
 exports.getBookingHistroyController = async (req, res, next) => {
@@ -381,16 +381,17 @@ exports.saveFirebaseTokenController = async (req, res, next) => {
     const response = await saveFirebaseTokenService({ userId, firebaseToken });
     res.json(response);
   } catch (error) {
-    next(errro);
+    next(error);
   }
 };
 exports.getNotificationController = async (req, res, next) => {
   try {
     const { userId } = req.headers;
-    const response = await getNotificationService({ userId });
+    let response = await getNotificationService({ userId });
+    console.log(response);
     res.json(response);
   } catch (error) {
-    next(errro);
+    next(error);
   }
 };
 exports.updateTrainerLocationController = async (req, res, next) => {

@@ -90,8 +90,6 @@ exports.getTrainerDetailService = async ({ trainerId }) => {
       realweight = realweight[1] == 'kg' ? realweight[0] * 2.2 : realweight[0];
       realheight =
         realheight[1] == 'cm' ? realheight[0] * 0.03 : realheight[0] * 12;
-
-      console.log(realweight, realheight, ' ', trainer);
       bmi = calcBmi(realweight, realheight, true);
       bmi.value = bmi.value.toFixed(2);
       return {

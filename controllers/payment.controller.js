@@ -24,6 +24,7 @@ exports.createPaymentController = async (req, res, next) => {
       userId,
       currency,
       payUserId,
+      feeId,
     } = { ...req.body, ...req.headers };
     const response = await creatPaymentService({
       accountId,
@@ -36,6 +37,7 @@ exports.createPaymentController = async (req, res, next) => {
       userId,
       currency,
       payUserId,
+      feeId,
     });
     res.json(response);
   } catch (error) {

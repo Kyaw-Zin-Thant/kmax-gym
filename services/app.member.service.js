@@ -65,6 +65,7 @@ exports.memberDetailInfoService = async ({ userId }) => {
         emergencyContact,
         medicalCheckUp,
         muli_address,
+        metadata = {},
       } = member;
       dateOfBirth = moment(new Date(dateOfBirth), 'DD-MM-YYYY');
       let bmi, realweight, realheight;
@@ -80,6 +81,7 @@ exports.memberDetailInfoService = async ({ userId }) => {
       address ? muli_address.push(address) : '';
       console.log('user address ' + address);
       muli_address = [...new Set(muli_address)];
+      const { noOfDay = '0' } = metadata;
       return {
         username,
         dateOfBirth,
@@ -100,6 +102,7 @@ exports.memberDetailInfoService = async ({ userId }) => {
         surgery,
         other,
         muli_address,
+        noOfDay,
       };
     } else {
       return null;
@@ -119,6 +122,7 @@ exports.bookingService = async ({
 }) => {
   try {
     let formatDate = moment(startDate).format('YYYY-MM-DD');
+
     const startTime =
       selectedTime == 1
         ? '7:30 AM'
@@ -127,7 +131,6 @@ exports.bookingService = async ({
         : '2:00 PM';
     const endTime =
       selectedTime == 1 ? '9:00 AM' : selectedTime == 2 ? '1:30 PM' : '3:30 PM';
-
     startDate = new Date(formatDate + ' ' + startTime);
     let endDate = new Date(formatDate + ' ' + endTime);
     let status = 'Pending';
@@ -144,6 +147,7 @@ exports.bookingService = async ({
     const result = await Promise.all([
       userBooking.save(),
       User.findById(trainerId),
+      User.findById(userId),
       new Notification({
         title: 'Your have a booking',
         body:
@@ -156,14 +160,14 @@ exports.bookingService = async ({
     ]);
     SendFirebaseMessage({
       data: {
-        title: 'Your have a booking',
+        title: 'Your have a booking from Member ' + result[2].username,
         body:
           `Booking For ` +
           moment(startDate).format('dddd, MMMM Do YYYY') +
           ` ${startTime} ${endTime}`,
       },
       notification: {
-        title: 'Your have a booking',
+        title: 'Your have a booking from Member ' + result[2].username,
         body:
           `Booking For ` +
           moment(startDate).format('dddd, MMMM Do YYYY') +
@@ -171,6 +175,11 @@ exports.bookingService = async ({
       },
       // priority: 'normal',
       to: result[1].firebaseToken || '',
+    });
+    const noOfDay = parseInt(result[2].metadata.noOfDay) - 1;
+
+    await User.findByIdAndUpdate(userId, {
+      $set: { 'metadata.noOfDay': noOfDay },
     });
     return { message: 'Successfully Booked', bookingId: result[0]._id };
   } catch (error) {

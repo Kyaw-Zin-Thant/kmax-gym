@@ -58,7 +58,7 @@ const schema = {
     type: Boolean,
     default: null,
   },
-  recommended: {
+  recommend: {
     type: Boolean,
     default: null,
   },
@@ -70,7 +70,7 @@ const schema = {
   metadata: {
     latitude: String,
     longitude: String,
-    noOfDays: String,
+    noOfDay: String,
     status: String,
   },
   weight_comparison: [

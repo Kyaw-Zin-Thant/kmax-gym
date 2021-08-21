@@ -26,6 +26,7 @@ exports.creatPaymentService = async ({
       fee = await Fee.findById(feeId);
       noOfDay = fee.noOfDay * (amount / fee.amount);
     }
+    console.log(feeId + ' ' + noOfDay);
     const accountAmount =
       paytype == 'Income' ? account.amount + amount : account.amount - amount;
     feeId
@@ -47,7 +48,7 @@ exports.creatPaymentService = async ({
           }),
           User.findByIdAndUpdate(userId, {
             $set: {
-              metadata: { noOfDays, status: 'Pending' },
+              metadata: { noOfDay, status: 'Pending' },
             },
           }),
         ])
@@ -107,6 +108,9 @@ exports.updatePaymentService = async ({
         }
       ),
       Account.findByIdAndUpdate(accountId, { $set: { amount: accountAmount } }),
+      User.findByIdAndUpdate(payUserId, {
+        $set: { 'metadata.status': status },
+      }),
     ]);
     return { message: 'Succesfully Updated' };
   } catch (error) {

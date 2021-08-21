@@ -6,6 +6,10 @@ const moment = require('moment');
 const { ObjectId } = mongoose.Types;
 const bcrypt = require('bcrypt');
 const fs = require('fs');
+const TimeAgo = require('javascript-time-ago');
+const en = require('javascript-time-ago/locale/en');
+
+TimeAgo.addDefaultLocale(en);
 const privateKey = fs.readFileSync('config/jwtRS256.key', 'utf8');
 const publicKey = fs.readFileSync('config/jwtRS256.key.pub', 'utf8');
 const jwt = require('jsonwebtoken');
@@ -366,6 +370,10 @@ exports.detailUserService = async ({ userId }) => {
           weight: 1,
           description: 1,
           address: 1,
+          experience: 1,
+          certificate: 1,
+          image: 1,
+          emergencyContact: 1,
         },
       },
     ]).exec();
@@ -491,14 +499,13 @@ exports.getUserHomeService = async ({ userId, bookingDate }) => {
     bookingDate = new Date(bookingDate);
     let startDate = new Date(bookingDate.setHours(0, 0, 0, 0));
     let endDate = new Date(bookingDate.setHours(23, 59, 59, 59));
-    console.log(startDate, 'startDate');
-    console.log(endDate, 'startDate');
 
     let result = await Promise.all([
       UserBooking.aggregate([
         {
           $match: {
             userId: ObjectId(userId),
+            status: { $ne: 'Reject' },
           },
         },
         {
@@ -540,7 +547,7 @@ exports.getUserHomeService = async ({ userId, bookingDate }) => {
                           {
                             $dateFromString: {
                               dateString: '$dateOfBirth',
-                              format: '%Y/%m/%d',
+                              format: '%Y-%m-%d',
                             },
                           },
                         ],
@@ -614,7 +621,7 @@ exports.getUserHomeService = async ({ userId, bookingDate }) => {
                     {
                       $dateFromString: {
                         dateString: '$dateOfBirth',
-                        format: '%Y/%m/%d',
+                        format: '%Y-%m-%d',
                       },
                     },
                   ],
@@ -653,7 +660,6 @@ exports.getUserHomeService = async ({ userId, bookingDate }) => {
     todayBooking
       ? (todayBooking.trainer[0].age = Math.floor(todayBooking.trainer[0].age))
       : '';
-    console.log(todayBooking);
     return { todayBooking: todayBooking || {}, suggestions };
   } catch (error) {
     console.log(error);
@@ -775,7 +781,7 @@ exports.saveFirebaseTokenService = async ({ userId, firebaseToken }) => {
 };
 exports.getNotificationService = async ({ userId }) => {
   try {
-    const result = await Notification.find(
+    let result = await Notification.find(
       { to: ObjectId(userId) },
       {
         _id: 0,
@@ -783,10 +789,16 @@ exports.getNotificationService = async ({ userId }) => {
         title: 1,
         body: 1,
         type: { $cond: ['$type', '$type', 'booking'] },
+        createdDate: 1,
       }
     );
-
-    return result;
+    const response = result.map((noti) => {
+      const { notiId, title, body, type } = noti;
+      const ago = new TimeAgo('en-MY').format(noti.createdDate);
+      console.log(ago);
+      return { notiId, title, body, type, ago };
+    });
+    return response;
   } catch (error) {
     throw error;
   }
