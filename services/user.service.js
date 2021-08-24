@@ -16,6 +16,7 @@ const jwt = require('jsonwebtoken');
 const Base64 = require('../config/base64');
 const crypto = require('crypto');
 const Notification = require('../models/notification.model');
+const Payment = require('../models/payment.model');
 exports.createUserService = async ({ email, password, userType }) => {
   try {
     password = Base64.decode(password);
@@ -377,9 +378,220 @@ exports.detailUserService = async ({ userId }) => {
         },
       },
     ]).exec();
-    let user = result[0];
 
-    return { user };
+    let user = result[0];
+    let response;
+    if (user.userType == 'Trainer') {
+      response = await Promise.all([
+        UserBooking.aggregate([
+          {
+            $match: {
+              trainerId: ObjectId(userId),
+            },
+          },
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $gte: ['$startTime', startDate] },
+                  { $lte: ['$endTime', endDate] },
+                ],
+              },
+            },
+          },
+          {
+            $lookup: {
+              from: 'users',
+              let: { userId: '$userId' },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ['$_id', '$$userId'],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    _id: 0,
+                    userId: '$_id',
+                    username: 1,
+                    image: 1,
+                    height: 1,
+                    weight: 1,
+                    image: 1,
+                    dateOfBirth: 1,
+                    trainerCode: 1,
+                  },
+                },
+              ],
+              as: 'user',
+            },
+          },
+          {
+            $unwind: '$user',
+          },
+          {
+            $lookup: {
+              from: 'diet_plans',
+              let: { dietPlans: '$suggestion.dietPlans' },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $in: ['$_id', '$$dietPlans'],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    _id: 1,
+                    type: 1,
+                    name: 1,
+                    image: 1,
+                    calorie: 1,
+                  },
+                },
+              ],
+              as: 'dietPlan',
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              bookId: '$_id',
+              techanics: 1,
+              startTime: '$startTime',
+              endTime: '$endTime',
+              user: 1,
+              status: 1,
+              review: 1,
+              rating: 1,
+              weight_comparison: 1,
+              suggestion: {
+                burnCalorie: '$suggestion.burnCalorie',
+                dietPlans: '$dietPlan',
+              },
+            },
+          },
+        ]),
+        Payment.find(
+          { payUserId: ObjectId(userId) },
+          {
+            _id: 0,
+            paymentId: '$_id',
+            amount: 1,
+            currency: 1,
+            description: 1,
+            status: 1,
+          }
+        ),
+      ]);
+    } else if (user.userType == 'Member') {
+      response = await Promise.all([
+        UserBooking.aggregate([
+          {
+            $match: {
+              userId: ObjectId(userId),
+            },
+          },
+          {
+            $lookup: {
+              from: 'users',
+              let: { trainerId: '$trainerId' },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ['$_id', '$$trainerId'],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    _id: 0,
+                    userId: '$_id',
+                    username: 1,
+                    image: 1,
+                    height: 1,
+                    weight: 1,
+                    image: 1,
+                    dateOfBirth: 1,
+                    trainerCode: 1,
+                  },
+                },
+              ],
+              as: 'user',
+            },
+          },
+          {
+            $unwind: '$user',
+          },
+          {
+            $lookup: {
+              from: 'diet_plans',
+              let: { dietPlans: '$suggestion.dietPlans' },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $in: ['$_id', '$$dietPlans'],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    _id: 1,
+                    type: 1,
+                    name: 1,
+                    image: 1,
+                    calorie: 1,
+                  },
+                },
+              ],
+              as: 'dietPlan',
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              bookId: '$_id',
+              techanics: 1,
+              startTime: '$startTime',
+              endTime: '$endTime',
+              user: 1,
+              status: 1,
+              review: 1,
+              rating: 1,
+              weight_comparison: 1,
+              suggestion: {
+                burnCalorie: '$suggestion.burnCalorie',
+                dietPlans: '$dietPlan',
+              },
+            },
+          },
+        ]),
+        Payment.find(
+          { payUserId: ObjectId(userId) },
+          {
+            _id: 0,
+            paymentId: '$_id',
+            amount: 1,
+            currency: 1,
+            description: 1,
+            status: 1,
+          }
+        ),
+      ]);
+    }
+    let books = [],
+      payments = [];
+    if (user.userType != 'Admin') {
+      books = response[0];
+      payments = response[1];
+    }
+
+    return { user, books, payments };
   } catch (error) {
     console.log(error);
     throw error;

@@ -93,10 +93,12 @@ router
   .post(profileUpload, createAdminController);
 router
   .route(`${baseURL}/users/admin/:adminId`)
-  .get(detailAdminController)
   .put(profileUpload, updateAdminController);
 
-router.route(`${baseURL}/users/:userId`).delete(deleteUserController);
+router
+  .route(`${baseURL}/users/:userId`)
+  .get(detailAdminController)
+  .delete(deleteUserController);
 
 router
   .route(`${baseURL}/users/bookings/history`)

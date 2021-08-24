@@ -348,8 +348,8 @@ exports.updateAdminController = async (req, res, next) => {
 };
 exports.detailAdminController = async (req, res, next) => {
   try {
-    const { adminId } = req.params;
-    const response = await detailUserService({ userId: adminId });
+    const { userId } = req.params;
+    const response = await detailUserService({ userId });
     res.json(response);
   } catch (error) {
     next(error);
