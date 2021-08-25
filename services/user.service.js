@@ -467,9 +467,17 @@ exports.detailUserService = async ({ userId }) => {
               status: 1,
               review: 1,
               rating: 1,
-              weight_comparison: 1,
+              weight_comparison: {
+                $cond: ['$weight_comparison', '$weight_comparison', {}],
+              },
               suggestion: {
-                burnCalorie: '$suggestion.burnCalorie',
+                burnCalorie: {
+                  $cond: [
+                    '$suggestion.burnCalorie',
+                    '$suggestion.burnCalorie',
+                    0,
+                  ],
+                },
                 dietPlans: '$dietPlan',
               },
             },
@@ -563,9 +571,17 @@ exports.detailUserService = async ({ userId }) => {
               status: 1,
               review: 1,
               rating: 1,
-              weight_comparison: 1,
+              weight_comparison: {
+                $cond: ['$weight_comparison', '$weight_comparison', {}],
+              },
               suggestion: {
-                burnCalorie: '$suggestion.burnCalorie',
+                burnCalorie: {
+                  $cond: [
+                    '$suggestion.burnCalorie',
+                    '$suggestion.burnCalorie',
+                    0,
+                  ],
+                },
                 dietPlans: '$dietPlan',
               },
             },
@@ -587,6 +603,9 @@ exports.detailUserService = async ({ userId }) => {
     let books = [],
       payments = [];
     if (user.userType != 'Admin') {
+      books = response[0];
+      payments = response[1];
+    } else {
       books = response[0];
       payments = response[1];
     }
