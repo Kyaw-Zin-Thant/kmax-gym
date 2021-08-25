@@ -595,9 +595,6 @@ exports.detailUserService = async ({ userId }) => {
     if (user.userType != 'Admin') {
       books = response[0];
       payments = response[1];
-    } else {
-      books = response[0];
-      payments = response[1];
     }
 
     return { user, books, payments };
