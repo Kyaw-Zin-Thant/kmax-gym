@@ -1003,7 +1003,7 @@ exports.getNotificationService = async ({ userId }) => {
         type: { $cond: ['$type', '$type', 'booking'] },
         createdDate: 1,
       }
-    );
+    ).sort({ createdDate: -1 });
     const response = result.map((noti) => {
       const { notiId, title, body, type } = noti;
       const ago = new TimeAgo('en-MY').format(noti.createdDate);

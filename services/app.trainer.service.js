@@ -197,29 +197,30 @@ exports.bookingStatusUpdate = async ({ bookingId, status }) => {
     );
     const { userId, trainerId, startTime, endTime, techanics } = booking;
     let userbookingHis = await UserHistory.findOne({ userId });
-    let user = await User.findById(userId);
+    let result = await Promise.all([
+      User.findById(userId),
+      User.findById(trainerId),
+    ]);
+    let user = result[0];
+    let trainer = result[1];
+    const trainerName = trainer.username;
+    const notiTime = moment(startTime).format('dddd, MMMM Do YYYY');
     SendFirebaseMessage({
       data: {
         title: 'Your booking is ' + status,
-        body:
-          `Booking ${status} For ` +
-          moment(startTime).format('dddd, MMMM Do YYYY'),
+        body: `Your booking is ${status} at ${notiTime}. Trainer ${trainerName} For `,
       },
       notification: {
         title: 'Your booking is ' + status,
-        body:
-          `Booking ${status} For ` +
-          moment(startTime).format('dddd, MMMM Do YYYY'),
+        body: `Your booking is ${status} at ${notiTime}. Trainer  ${trainerName} For `,
       },
       to:
         user.firebaseToken ||
         'eUcMfDyVQh-bnV5lyC6OFE:APA91bF2CxZL_5fGFj8IBy7z7aHAaPpNVjdeO_iF2vOHLvqP5NK8zDfeKc2PLHf4aW80elJ8eZaPig1FeK6kYRF3G9AiWBmpdWzSJtdOKcPgwodFlXP6oBL5yFo91oCiBVnOWQarstNY',
     });
     await new Notification({
-      title: 'Your booking is ' + status,
-      body:
-        `Booking ${status} For ` +
-        moment(startTime).format('dddd, MMMM Do YYYY'),
+      title: 'You booking is ' + status,
+      body: `Your booking is ${status} at ${notiTime}. Trainer  ${trainerName}  `,
       to: user._id,
       type: 'booking',
     }).save();

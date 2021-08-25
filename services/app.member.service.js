@@ -148,34 +148,34 @@ exports.bookingService = async ({
       userBooking.save(),
       User.findById(trainerId),
       User.findById(userId),
-      new Notification({
-        title: 'Your have a booking',
-        body:
-          `Booking For ` +
-          moment(startDate).format('dddd, MMMM Do YYYY') +
-          ` ${startTime} ${endTime}`,
-        to: trainerId,
-        type: 'booking',
-      }).save(),
     ]);
-    SendFirebaseMessage({
-      data: {
-        title: 'Your have a booking from Member ' + result[2].username,
-        body:
-          `Booking For ` +
-          moment(startDate).format('dddd, MMMM Do YYYY') +
-          ` ${startTime} ${endTime}`,
-      },
-      notification: {
-        title: 'Your have a booking from Member ' + result[2].username,
-        body:
-          `Booking For ` +
-          moment(startDate).format('dddd, MMMM Do YYYY') +
-          ` ${startTime} ${endTime}`,
-      },
-      // priority: 'normal',
-      to: result[1].firebaseToken || '',
-    });
+    await new Notification({
+      title: 'You have a booking from Member ' + result[2].username,
+      body:
+        `Booking For ` +
+        moment(startDate).format('dddd, MMMM Do YYYY') +
+        ` ${startTime} ${endTime}`,
+      to: trainerId,
+      type: 'booking',
+    }).save(),
+      SendFirebaseMessage({
+        data: {
+          title: 'You have a booking from Member ' + result[2].username,
+          body:
+            `Booking For ` +
+            moment(startDate).format('dddd, MMMM Do YYYY') +
+            ` ${startTime} ${endTime}`,
+        },
+        notification: {
+          title: 'You have a booking from Member ' + result[2].username,
+          body:
+            `Booking For ` +
+            moment(startDate).format('dddd, MMMM Do YYYY') +
+            ` ${startTime} ${endTime}`,
+        },
+        // priority: 'normal',
+        to: result[1].firebaseToken || '',
+      });
     const noOfDay = parseInt(result[2].metadata.noOfDay) - 1;
 
     await User.findByIdAndUpdate(userId, {
