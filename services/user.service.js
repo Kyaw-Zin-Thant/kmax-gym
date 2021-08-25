@@ -390,16 +390,6 @@ exports.detailUserService = async ({ userId }) => {
             },
           },
           {
-            $match: {
-              $expr: {
-                $and: [
-                  { $gte: ['$startTime', startDate] },
-                  { $lte: ['$endTime', endDate] },
-                ],
-              },
-            },
-          },
-          {
             $lookup: {
               from: 'users',
               let: { userId: '$userId' },
