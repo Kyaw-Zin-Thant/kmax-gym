@@ -4,6 +4,8 @@ var calcBmi = require('bmi-calc');
 const UserBooking = require('../models/user.booking.trainer.model');
 const { SendFirebaseMessage } = require('./firebase.messaging.service');
 const Notification = require('../models/notification.model');
+const mongoose = require('mongoose');
+const { ObjectId } = mongoose.Types;
 exports.updatMemberInfoService = async ({
   username,
   gender,
@@ -131,57 +133,67 @@ exports.bookingService = async ({
         : '2:00 PM';
     const endTime =
       selectedTime == 1 ? '9:00 AM' : selectedTime == 2 ? '1:30 PM' : '3:30 PM';
-    startDate = new Date(formatDate + ' ' + startTime);
-    let endDate = new Date(formatDate + ' ' + endTime);
+    startDate = new Date(formatDate + ' ' + startTime + ' GMT+0630');
+    let endDate = new Date(formatDate + ' ' + endTime + ' GMT+0630');
     let status = 'Pending';
-    const userBooking = await new UserBooking({
-      userId,
-      trainerId,
-      status,
+    const checkOld = await UserBooking.findOne({
+      trainerId: ObjectId(trainerId),
       startTime: startDate,
-      endTime: endDate,
-      techanics,
-      count,
-      relative,
     });
-    const result = await Promise.all([
-      userBooking.save(),
-      User.findById(trainerId),
-      User.findById(userId),
-    ]);
-    await new Notification({
-      title: 'You have a booking from Member ' + result[2].username,
-      body:
-        `Booking For ` +
-        moment(startDate).format('dddd, MMMM Do YYYY') +
-        ` ${startTime} ${endTime}`,
-      to: trainerId,
-      type: 'booking',
-    }).save(),
-      SendFirebaseMessage({
-        data: {
-          title: 'You have a booking from Member ' + result[2].username,
-          body:
-            `Booking For ` +
-            moment(startDate).format('dddd, MMMM Do YYYY') +
-            ` ${startTime} ${endTime}`,
-        },
-        notification: {
-          title: 'You have a booking from Member ' + result[2].username,
-          body:
-            `Booking For ` +
-            moment(startDate).format('dddd, MMMM Do YYYY') +
-            ` ${startTime} ${endTime}`,
-        },
-        // priority: 'normal',
-        to: result[1].firebaseToken || '',
+    if (checkOld) {
+      const Alerror = new Error('Your Trainer is already booked');
+      Alerror.status = 400;
+      throw Alerror;
+    } else {
+      const userBooking = await new UserBooking({
+        userId,
+        trainerId,
+        status,
+        startTime: startDate,
+        endTime: endDate,
+        techanics,
+        count,
+        relative,
       });
-    const noOfDay = parseInt(result[2].metadata.noOfDay) - 1;
+      const result = await Promise.all([
+        userBooking.save(),
+        User.findById(trainerId),
+        User.findById(userId),
+      ]);
+      await new Notification({
+        title: 'You have a booking from Member ' + result[2].username,
+        body:
+          `Booking For ` +
+          moment(startDate).format('dddd, MMMM Do YYYY') +
+          ` ${startTime} ${endTime}`,
+        to: trainerId,
+        type: 'booking',
+      }).save(),
+        SendFirebaseMessage({
+          data: {
+            title: 'You have a booking from Member ' + result[2].username,
+            body:
+              `Booking For ` +
+              moment(startDate).format('dddd, MMMM Do YYYY') +
+              ` ${startTime} ${endTime}`,
+          },
+          notification: {
+            title: 'You have a booking from Member ' + result[2].username,
+            body:
+              `Booking For ` +
+              moment(startDate).format('dddd, MMMM Do YYYY') +
+              ` ${startTime} ${endTime}`,
+          },
+          // priority: 'normal',
+          to: result[1].firebaseToken || '',
+        });
+      const noOfDay = parseInt(result[2].metadata.noOfDay) - 1;
 
-    await User.findByIdAndUpdate(userId, {
-      $set: { 'metadata.noOfDay': noOfDay },
-    });
-    return { message: 'Successfully Booked', bookingId: result[0]._id };
+      await User.findByIdAndUpdate(userId, {
+        $set: { 'metadata.noOfDay': noOfDay },
+      });
+      return { message: 'Successfully Booked', bookingId: result[0]._id };
+    }
   } catch (error) {
     throw error;
   }

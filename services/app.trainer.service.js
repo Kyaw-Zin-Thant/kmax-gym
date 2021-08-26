@@ -214,9 +214,7 @@ exports.bookingStatusUpdate = async ({ bookingId, status }) => {
         title: 'Your booking is ' + status,
         body: `Your booking is ${status} at ${notiTime}. Trainer  ${trainerName} For `,
       },
-      to:
-        user.firebaseToken ||
-        'eUcMfDyVQh-bnV5lyC6OFE:APA91bF2CxZL_5fGFj8IBy7z7aHAaPpNVjdeO_iF2vOHLvqP5NK8zDfeKc2PLHf4aW80elJ8eZaPig1FeK6kYRF3G9AiWBmpdWzSJtdOKcPgwodFlXP6oBL5yFo91oCiBVnOWQarstNY',
+      to: user.firebaseToken,
     });
     await new Notification({
       title: 'You booking is ' + status,

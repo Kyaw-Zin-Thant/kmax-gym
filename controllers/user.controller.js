@@ -21,6 +21,7 @@ const {
   addNewAddressService,
   changePasswordService,
   updateAddressService,
+  getBookingDateService,
 } = require('../services/user.service');
 exports.createUserController = async (req, res, next) => {
   let { email, password, userType = 'Member' } = req.body;
@@ -368,6 +369,15 @@ exports.getBookingHistroyController = async (req, res, next) => {
   try {
     const { userId, userType } = req.headers;
     const response = await getBookingHistroyService({ userId, userType });
+    res.json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getBookingDateController = async (req, res, next) => {
+  try {
+    const { userId, userType } = req.headers;
+    const response = await getBookingDateService({ userId, userType });
     res.json(response);
   } catch (error) {
     next(error);

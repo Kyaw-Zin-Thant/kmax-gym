@@ -22,6 +22,7 @@ const {
   addNewAddressController,
   changePasswordController,
   updateAddressController,
+  getBookingDateController,
 } = require('../controllers/user.controller');
 const router = express.Router();
 const baseURL = '/api/v1';
@@ -103,6 +104,9 @@ router
 router
   .route(`${baseURL}/users/bookings/history`)
   .get(getBookingHistroyController);
+
+router.route(`${baseURL}/users/bookings/date`).get(getBookingDateController);
+
 router
   .route(`${baseURL}/users/register/firebase`)
   .post(saveFirebaseTokenController);

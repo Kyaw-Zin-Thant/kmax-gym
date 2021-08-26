@@ -14,7 +14,10 @@ exports.SendFirebaseMessage = async ({ data, notification, to }) => {
       if (err) {
         console.log('Something has gone wrong!', err);
       } else {
-        console.log('Successfully sent with response: ', response);
+        console.log(
+          'Successfully sent with response: ',
+          JSON.stringify(response)
+        );
       }
     }
   );

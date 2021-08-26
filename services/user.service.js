@@ -482,6 +482,7 @@ exports.detailUserService = async ({ userId }) => {
             currency: 1,
             description: 1,
             status: 1,
+            createdDate: 1,
           }
         ),
       ]);
@@ -586,6 +587,7 @@ exports.detailUserService = async ({ userId }) => {
             currency: 1,
             description: 1,
             status: 1,
+            createdDate: 1,
           }
         ),
       ]);
@@ -758,20 +760,22 @@ exports.getUserHomeService = async ({ userId, bookingDate }) => {
                   weight: 1,
                   image: 1,
                   age: {
-                    $divide: [
-                      {
-                        $subtract: [
-                          new Date(),
-                          {
-                            $dateFromString: {
-                              dateString: '$dateOfBirth',
-                              format: '%Y-%m-%d',
+                    $floor: {
+                      $divide: [
+                        {
+                          $subtract: [
+                            new Date(),
+                            {
+                              $dateFromString: {
+                                dateString: '$dateOfBirth',
+                                format: '%Y-%m-%d',
+                              },
                             },
-                          },
-                        ],
-                      },
-                      365 * 24 * 60 * 60 * 1000,
-                    ],
+                          ],
+                        },
+                        365 * 24 * 60 * 60 * 1000,
+                      ],
+                    },
                   },
                   trainerCode: 1,
                 },
@@ -832,20 +836,22 @@ exports.getUserHomeService = async ({ userId, bookingDate }) => {
             userId: '$_id',
             username: 1,
             age: {
-              $divide: [
-                {
-                  $subtract: [
-                    new Date(),
-                    {
-                      $dateFromString: {
-                        dateString: '$dateOfBirth',
-                        format: '%Y-%m-%d',
+              $floor: {
+                $divide: [
+                  {
+                    $subtract: [
+                      new Date(),
+                      {
+                        $dateFromString: {
+                          dateString: '$dateOfBirth',
+                          format: '%Y-%m-%d',
+                        },
                       },
-                    },
-                  ],
-                },
-                365 * 24 * 60 * 60 * 1000,
-              ],
+                    ],
+                  },
+                  365 * 24 * 60 * 60 * 1000,
+                ],
+              },
             },
             height: 1,
             weight: 1,
@@ -855,7 +861,7 @@ exports.getUserHomeService = async ({ userId, bookingDate }) => {
         },
       ]),
     ]);
-    let todayBooking = result[0][0];
+    let todayBooking = result[0];
     const suggestions = result[1];
     // todayBooking
     //   ? (todayBooking.trainingDay = moment(
@@ -875,10 +881,10 @@ exports.getUserHomeService = async ({ userId, bookingDate }) => {
     //       moment(todayBooking.trainingEndTime).format('LT'))
     //   : '';
     todayBooking = todayBooking ? todayBooking : null;
-    todayBooking
-      ? (todayBooking.trainer[0].age = Math.floor(todayBooking.trainer[0].age))
-      : '';
-    return { todayBooking: todayBooking || {}, suggestions };
+    // todayBooking
+    //   ? (todayBooking.trainer[0].age = Math.floor(todayBooking.trainer[0].age))
+    //   : '';
+    return { todayBooking: todayBooking || [], suggestions };
   } catch (error) {
     console.log(error);
     throw error;
@@ -919,9 +925,31 @@ exports.getBookingHistroyService = async ({ userId, userType }) => {
             {
               $project: {
                 _id: 0,
+                userId: '$_id',
                 username: 1,
-                phoneNumber: 1,
                 image: 1,
+                height: 1,
+                weight: 1,
+                image: 1,
+                age: {
+                  $floor: {
+                    $divide: [
+                      {
+                        $subtract: [
+                          new Date(),
+                          {
+                            $dateFromString: {
+                              dateString: '$dateOfBirth',
+                              format: '%Y-%m-%d',
+                            },
+                          },
+                        ],
+                      },
+                      365 * 24 * 60 * 60 * 1000,
+                    ],
+                  },
+                },
+                trainerCode: 1,
               },
             },
           ],
@@ -970,20 +998,85 @@ exports.getBookingHistroyService = async ({ userId, userType }) => {
         },
       },
       {
+        $sort: {
+          startTime: -1,
+        },
+      },
+      {
+        $lookup: {
+          from: 'diet_plans',
+          let: { dietPlans: '$suggestion.dietPlans' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $in: ['$_id', '$$dietPlans'],
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+                type: 1,
+                name: 1,
+                image: 1,
+                calorie: 1,
+              },
+            },
+          ],
+          as: 'dietPlan',
+        },
+      },
+      {
         $project: {
-          _id: 0,
-          bookingId: '$_id',
-          member: 1,
-          trainer: 1,
-          status: 1,
-          techanics: '$techanics',
+          _id: 1,
+          bookId: '$_id',
+          techanics: 1,
           startTime: '$startTime',
           endTime: '$endTime',
+          trainer: 1,
+          member: 1,
+          status: 1,
           weight_comparison: 1,
+          suggestion: {
+            burnCalorie: '$suggestion.burnCalorie',
+            dietPlans: '$dietPlan',
+          },
         },
       },
     ]);
-    console.log(JSON.stringify(result) + ' gggg ggg g');
+    return result;
+  } catch (error) {
+    throw error;
+  }
+};
+exports.getBookingDateService = async ({ userId, userType }) => {
+  try {
+    let matchQuery = {
+      $match: {},
+    };
+    if (userType == 'Trainer') {
+      matchQuery = {
+        $match: {
+          trainerId: ObjectId(userId),
+        },
+      };
+    } else if (userType == 'Member') {
+      matchQuery = {
+        $match: {
+          userId: ObjectId(userId),
+        },
+      };
+    }
+    let result = await UserBooking.aggregate([
+      matchQuery,
+      {
+        $project: {
+          _id: 0,
+          startTime: 1,
+        },
+      },
+    ]);
     return result;
   } catch (error) {
     throw error;
@@ -991,6 +1084,7 @@ exports.getBookingHistroyService = async ({ userId, userType }) => {
 };
 exports.saveFirebaseTokenService = async ({ userId, firebaseToken }) => {
   try {
+    console.log(firebaseToken + ' firebaseToken');
     await User.findByIdAndUpdate(userId, { firebaseToken });
     return { message: 'Successfully Updated' };
   } catch (error) {
