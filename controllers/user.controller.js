@@ -79,6 +79,8 @@ exports.getUserController = async (req, res, next) => {
       sortColumn = 'createdDate',
       sortDirection = 'desc',
     } = req.query;
+    const loginnedUserType = req.headers.userType;
+    const userId = req.headers.userId;
     let response = await getUserService({
       userType,
       search,
@@ -86,6 +88,8 @@ exports.getUserController = async (req, res, next) => {
       limit,
       sortColumn,
       sortDirection,
+      loginnedUserType,
+      userId,
     });
     res.status(200).json(response);
   } catch (error) {

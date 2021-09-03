@@ -11,6 +11,7 @@ const {
   bookingController,
   getMemberWeightNoteController,
   reviewAndRatingController,
+  cancelBookingController,
 } = require('../controllers/app.member.controller');
 const router = express.Router();
 const baseURL = '/api/v1';
@@ -74,6 +75,9 @@ router.route(`${baseURL}/users/members/booking`).post(bookingController);
 router
   .route(`${baseURL}/users/members/bookings/:bookingId/review-rating`)
   .post(reviewAndRatingController);
+router
+  .route(`${baseURL}/users/members/bookings/:bookingId/cancel`)
+  .post(cancelBookingController);
 router
   .route(`${baseURL}/member-booking/weight-comparison`)
   .get(getMemberWeightNoteController);

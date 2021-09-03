@@ -52,12 +52,8 @@ exports.updatePaymentController = async (req, res, next) => {
       description,
       paytype,
       status,
-      payAccount,
-      payAccountType,
-      userId,
       paymentId,
       currency,
-      payUserId,
     } = { ...req.body, ...req.headers, ...req.params };
     const response = await updatePaymentService({
       accountId,
@@ -65,12 +61,8 @@ exports.updatePaymentController = async (req, res, next) => {
       description,
       paytype,
       status,
-      payAccount,
-      payAccountType,
-      userId,
       paymentId,
       currency,
-      payUserId,
     });
     res.json(response);
   } catch (error) {

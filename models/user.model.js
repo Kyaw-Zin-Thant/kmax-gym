@@ -94,6 +94,7 @@ const schema = {
       },
     },
   ],
+  noOfDay: Number,
 };
 const UserSchema = new Schema(schema, {
   timestamps: {

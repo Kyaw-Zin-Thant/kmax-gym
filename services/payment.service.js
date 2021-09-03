@@ -49,15 +49,12 @@ exports.creatPaymentService = async ({
             createdUser: userId,
             currency,
             payUserId,
+            feeId,
           }).save(),
           Account.findByIdAndUpdate(accountId, {
             $set: { amount: accountAmount },
           }),
-          User.findByIdAndUpdate(userId, {
-            $set: {
-              metadata: { noOfDay, status: 'Pending' },
-            },
-          }),
+          User.findByIdAndUpdate(userId, { $set: { noOfDay } }),
         ])
       : await Promise.all([
           new Payment({
@@ -88,18 +85,15 @@ exports.updatePaymentService = async ({
   description,
   paytype,
   status,
-  payAccount,
-  payAccountType,
-  userId,
   paymentId,
   currency = 'MMK',
-  payUserId,
 }) => {
   try {
     const account = await Account.findById(accountId);
     const accountAmount =
       paytype == 'Income' ? account.amount + amount : account.amount - amount;
-    await Promise.all([
+
+    const result = await Promise.all([
       Payment.updateOne(
         { _id: ObjectId(paymentId) },
         {
@@ -108,18 +102,28 @@ exports.updatePaymentService = async ({
           description,
           paytype,
           status,
-          payAccount,
-          payAccountType,
-          createdUser: userId,
+          paymentId,
           currency,
-          payUserId,
         }
       ),
       Account.findByIdAndUpdate(accountId, { $set: { amount: accountAmount } }),
-      User.findByIdAndUpdate(payUserId, {
-        $set: { 'metadata.status': status },
-      }),
+      Payment.findById(paymentId),
     ]);
+    if (status == 'Approved') {
+      const user = await User.findById(result[2].createdUser);
+      if (user) {
+        const noOfDay =
+          user.metadata && user.metadata.noOfDay
+            ? parseInt(user.metadata.noOfDay) + (user.noOfDay || 1)
+            : user.noOfDay || 1;
+        await User.findByIdAndUpdate(user._id, {
+          $set: {
+            'metadata.noOfDay': noOfDay,
+            'metadata.status': status,
+          },
+        });
+      }
+    }
     return { message: 'Succesfully Updated' };
   } catch (error) {
     throw error;
@@ -305,13 +309,13 @@ exports.getPaymentService = async ({
       {
         $lookup: {
           from: 'users',
-          let: { payUserId: '$payUserId' },
+          let: {
+            payUserId: '$payUserId',
+          },
           pipeline: [
             {
               $match: {
-                $expr: {
-                  $eq: ['$_id', '$$payUserId'],
-                },
+                $expr: { $eq: ['$_id', '$$payUserId'] },
               },
             },
             {

@@ -173,6 +173,8 @@ exports.getUserService = async ({
   limit,
   sortColumn,
   sortDirection,
+  loginnedUserType,
+  userId,
 }) => {
   try {
     sortDirection = sortDirection === 'desc' ? -1 : 1;
@@ -182,6 +184,23 @@ exports.getUserService = async ({
     let searchQuery = {
       $match: {},
     };
+    let femaleQuery = {
+      $match: {},
+    };
+    if (loginnedUserType == 'Member') {
+      const loginnedUser = await User.findById(userId);
+
+      if (loginnedUser.gender.toUpperCase() == 'MALE') {
+        femaleQuery = {
+          $match: {
+            $expr: {
+              $ne: [{ $toUpper: '$gender' }, 'FEMALE'],
+            },
+          },
+        };
+      }
+      console.log(JSON.stringify(femaleQuery), ' ', loginnedUser.gender);
+    }
     if (search) {
       searchQuery = {
         $match: {
@@ -239,6 +258,7 @@ exports.getUserService = async ({
       };
     }
     let result = await User.aggregate([
+      femaleQuery,
       {
         $match: {
           userType: userType,

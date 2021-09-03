@@ -139,6 +139,7 @@ exports.bookingService = async ({
     const checkOld = await UserBooking.findOne({
       trainerId: ObjectId(trainerId),
       startTime: startDate,
+      status: { $ne: 'Reject' },
     });
     if (checkOld) {
       const Alerror = new Error('Your Trainer is already booked');
@@ -216,4 +217,24 @@ exports.reviewAndRatingServices = async ({ bookingId, review, rating }) => {
   } catch (error) {
     throw error;
   }
+};
+exports.cancelBookingServices = async ({ bookingId }) => {
+  try {
+    const booking = await UserBooking.findById(bookingId);
+    const hours = Math.floor(Math.abs(booking.startTime - new Date()) / 36e5);
+    const user = await User.findById(booking.userId);
+    if (hours > 18) {
+      await UserBooking.deleteOne({ _id: booking._id });
+      const noOfDay = user.metadata.noOfDay + 1;
+      await User.findByIdAndUpdate(user.userId, {
+        $set: { 'metadata.noOfDay': noOfDay },
+      });
+
+      return { message: 'Successfully Cancel Your Booking' };
+    } else {
+      let error = new Error('၁၈ နာရီမတိုင်ခင် ဘဲ cancel လုပ်နိုင်မည်');
+      error.status = 400;
+      throw error;
+    }
+  } catch (error) {}
 };

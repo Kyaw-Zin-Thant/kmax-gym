@@ -204,6 +204,7 @@ exports.bookingStatusUpdate = async ({ bookingId, status }) => {
     let user = result[0];
     let trainer = result[1];
     const trainerName = trainer.username;
+
     const notiTime = moment(startTime).format('dddd, MMMM Do YYYY');
     SendFirebaseMessage({
       data: {
@@ -222,6 +223,12 @@ exports.bookingStatusUpdate = async ({ bookingId, status }) => {
       to: user._id,
       type: 'booking',
     }).save();
+    if (status.toUpperCase() == 'REJECT') {
+      const noOfDay = user.metadata.noOfDay + 1;
+      await User.findByIdAndUpdate(user.userId, {
+        $set: { 'metadata.noOfDay': noOfDay },
+      });
+    }
     if (userbookingHis && status == 'Accept') {
       const trainers = [
         ...userbookingHis.trainers,

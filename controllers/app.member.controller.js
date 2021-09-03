@@ -5,6 +5,7 @@ const {
   bookingService,
   getMemberWeightNoteServices,
   reviewAndRatingServices,
+  cancelBookingServices,
 } = require('../services/app.member.service');
 /**
  * After acc sign up update user info
@@ -135,6 +136,18 @@ exports.reviewAndRatingController = async (req, res, next) => {
       bookingId,
       review,
       rating,
+    });
+    res.json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.cancelBookingController = async (req, res, next) => {
+  try {
+    const { bookingId } = req.params;
+    const response = await cancelBookingServices({
+      bookingId,
     });
     res.json(response);
   } catch (error) {

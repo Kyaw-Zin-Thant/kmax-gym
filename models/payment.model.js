@@ -15,6 +15,7 @@ const schema = {
   status: String,
   payAccount: String,
   payAccountType: String,
+  feeId: ObjectId,
 };
 const PaymentSchema = new Schema(schema, {
   timestamps: {
