@@ -26,9 +26,16 @@ exports.creatPaymentService = async ({
       fee = await Fee.findById(feeId);
       noOfDay = fee.noOfDay * (amount / fee.amount);
     }
-    console.log(feeId + ' ' + noOfDay);
+    amount = parseInt(amount);
     const accountAmount =
-      paytype == 'Income' ? account.amount + amount : account.amount - amount;
+      paytype == 'Income'
+        ? !isNaN(account.amount)
+          ? account.amount + amount
+          : amount
+        : !isNaN(account.amount)
+        ? account.amount - amount
+        : amount;
+    console.log(!isNaN(account.amount));
     feeId
       ? await Promise.all([
           new Payment({
@@ -71,6 +78,7 @@ exports.creatPaymentService = async ({
         ]);
     return { message: 'Succesfully Created' };
   } catch (error) {
+    console.log(error);
     throw error;
   }
 };
