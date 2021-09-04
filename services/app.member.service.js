@@ -231,7 +231,7 @@ exports.cancelBookingServices = async ({ bookingId }) => {
       let trainer = result[1];
       const trainerName = user.username;
 
-      const notiTime = moment(startTime).format('dddd, MMMM Do YYYY');
+      const notiTime = moment(booking.startTime).format('dddd, MMMM Do YYYY');
       const noOfDay =
         user.metadata && user.metadata.noOfDay
           ? parseInt(user.metadata.noOfDay) + 1
