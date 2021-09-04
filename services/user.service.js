@@ -95,7 +95,6 @@ exports.updateTrainerService = async ({
       height,
       weight,
       description,
-      trainerCode,
     });
     return { message: 'Successfully updated', userId: user._id };
   } catch (error) {

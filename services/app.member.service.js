@@ -223,6 +223,7 @@ exports.cancelBookingServices = async ({ bookingId }) => {
     const booking = await UserBooking.findById(bookingId);
     const hours = Math.floor(Math.abs(booking.startTime - new Date()) / 36e5);
     const user = await User.findById(booking.userId);
+    console.log(hours);
     if (hours > 18) {
       await UserBooking.deleteOne({ _id: booking._id });
       const noOfDay = user.metadata.noOfDay + 1;
@@ -236,5 +237,7 @@ exports.cancelBookingServices = async ({ bookingId }) => {
       error.status = 400;
       throw error;
     }
-  } catch (error) {}
+  } catch (error) {
+    throw error;
+  }
 };
