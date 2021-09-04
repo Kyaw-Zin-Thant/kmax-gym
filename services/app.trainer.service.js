@@ -223,9 +223,11 @@ exports.bookingStatusUpdate = async ({ bookingId, status }) => {
       to: user._id,
       type: 'booking',
     }).save();
+    console.log(status);
     if (status.toUpperCase() == 'REJECT') {
-      const noOfDay = user.metadata.noOfDay + 1;
-      await User.findByIdAndUpdate(user.userId, {
+      const noOfDay = parseInt(user.metadata.noOfDay) || 0 + 1;
+      console.log(noOfDay, ' ', user.metadata.noOfDay);
+      await User.findByIdAndUpdate(user._id, {
         $set: { 'metadata.noOfDay': noOfDay },
       });
     }
