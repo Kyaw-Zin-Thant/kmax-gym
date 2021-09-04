@@ -14,6 +14,7 @@ const schema = {
       'Start Training',
       'Coming',
       'Arrived',
+      'Canceled',
     ],
   },
   relative: [ObjectId],

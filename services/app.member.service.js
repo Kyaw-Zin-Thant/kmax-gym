@@ -223,17 +223,42 @@ exports.cancelBookingServices = async ({ bookingId }) => {
     const booking = await UserBooking.findById(bookingId);
     const hours = Math.floor(Math.abs(booking.startTime - new Date()) / 36e5);
     const user = await User.findById(booking.userId);
-    console.log(hours);
-    if (hours > 18) {
-      await UserBooking.deleteOne({ _id: booking._id });
-      const noOfDay = user.metadata.noOfDay + 1;
-      await User.findByIdAndUpdate(user.userId, {
+    if (hours > 8) {
+      let result = await Promise.all([
+        UserBooking.findByIdAndUpdate(booking._id, { status: 'Canceled' }),
+        User.findById(booking.trainerId),
+      ]);
+      let trainer = result[1];
+      const trainerName = user.username;
+
+      const notiTime = moment(startTime).format('dddd, MMMM Do YYYY');
+      const noOfDay =
+        user.metadata && user.metadata.noOfDay
+          ? parseInt(user.metadata.noOfDay) + 1
+          : 1;
+      await User.findByIdAndUpdate(user._id, {
         $set: { 'metadata.noOfDay': noOfDay },
       });
-
+      SendFirebaseMessage({
+        data: {
+          title: 'Your booking have been canceled ',
+          body: `Your booking have been canceled at ${notiTime} by Member  ${trainerName} `,
+        },
+        notification: {
+          title: 'Your booking have been canceled ',
+          body: `Your booking have been canceled at ${notiTime} by Member  ${trainerName} `,
+        },
+        to: trainer.firebaseToken,
+      });
+      await new Notification({
+        title: 'Your booking have been canceled ',
+        body: `Your booking have been canceled at ${notiTime} by Member  ${trainerName} `,
+        to: trainer._id,
+        type: 'booking',
+      }).save();
       return { message: 'Successfully Cancel Your Booking' };
     } else {
-      let error = new Error('၁၈ နာရီမတိုင်ခင် ဘဲ cancel လုပ်နိုင်မည်');
+      let error = new Error('၈ နာရီမတိုင်ခင် ဘဲ cancel လုပ်နိုင်မည်');
       error.status = 400;
       throw error;
     }
