@@ -4,8 +4,8 @@ const { ObjectId } = mongoose.Schema.Types;
 const schema = {
   name: String,
   bannerImage: String,
-  startDate: Date,
-  endDate: Date,
+  startDate: String,
+  endDate: String,
 };
 const PromotionSchema = new Schema(schema, {
   timestamps: {
