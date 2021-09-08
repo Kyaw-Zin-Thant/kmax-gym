@@ -6,6 +6,7 @@ exports.checkToken = async (req, res, next) => {
     if (
       req.method == 'OPTIONS' ||
       req.path == '/api/v1/users/login' ||
+      req.path == '/api/v1/promotions' ||
       (req.path == '/api/v1/users/members' && req.method == 'POST') ||
       req.path.includes('/public/uploads')
     ) {
