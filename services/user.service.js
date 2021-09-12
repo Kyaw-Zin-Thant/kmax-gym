@@ -973,12 +973,173 @@ exports.getBookingHistroyService = async ({ userId, userType }) => {
     let matchQuery = {
       $match: {},
     };
+    let memberRelativeQuery = [];
     if (userType == 'Trainer') {
       matchQuery = {
         $match: {
           trainerId: ObjectId(userId),
         },
       };
+      memberRelativeQuery = [
+        {
+          $lookup: {
+            from: 'users',
+            let: {
+              userId: '$userId',
+              weight_comparison: '$weight_comparison',
+              suggestion: '$suggestion',
+            },
+            pipeline: [
+              {
+                $match: {
+                  $expr: { $eq: ['$_id', '$$userId'] },
+                },
+              },
+              {
+                $project: {
+                  _id: 0,
+                  username: 1,
+                  phoneNumber: 1,
+                  image: 1,
+                  height: 1,
+                  weight: 1,
+                  medicalCheckUp: 1,
+                  address: 1,
+                  dateOfBirth: 1,
+                  weight_comparison: {
+                    $cond: [
+                      {
+                        $gte: [
+                          {
+                            $indexOfArray: [
+                              '$$weight_comparison.userId',
+                              '$_id',
+                            ],
+                          },
+                          0,
+                        ],
+                      },
+                      {
+                        $arrayElemAt: [
+                          '$$weight_comparison',
+                          {
+                            $indexOfArray: [
+                              '$$weight_comparison.userId',
+                              '$_id',
+                            ],
+                          },
+                        ],
+                      },
+                      null,
+                    ],
+                  },
+                  suggestion: {
+                    $cond: [
+                      {
+                        $gte: [
+                          {
+                            $indexOfArray: ['$$suggestion.userId', '$_id'],
+                          },
+                          0,
+                        ],
+                      },
+                      {
+                        $arrayElemAt: [
+                          '$$suggestion',
+                          {
+                            $indexOfArray: ['$$suggestion.userId', '$_id'],
+                          },
+                        ],
+                      },
+                      null,
+                    ],
+                  },
+                },
+              },
+            ],
+            as: 'member',
+          },
+        },
+        {
+          $unwind: {
+            path: '$member',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $lookup: {
+            from: 'users',
+            let: {
+              relative: '$relative',
+              weight_comparison: '$weight_comparison',
+              suggestion: '$suggestion',
+            },
+            pipeline: [
+              {
+                $match: {
+                  $expr: { $in: ['$_id', '$$relative'] },
+                },
+              },
+              {
+                $project: {
+                  _id: 0,
+                  userId: '$_id',
+                  username: 1,
+                  weight_comparison: {
+                    $cond: [
+                      {
+                        $gte: [
+                          {
+                            $indexOfArray: [
+                              '$$weight_comparison.userId',
+                              '$_id',
+                            ],
+                          },
+                          0,
+                        ],
+                      },
+                      {
+                        $arrayElemAt: [
+                          '$$weight_comparison',
+                          {
+                            $indexOfArray: [
+                              '$$weight_comparison.userId',
+                              '$_id',
+                            ],
+                          },
+                        ],
+                      },
+                      null,
+                    ],
+                  },
+                  suggestion: {
+                    $cond: [
+                      {
+                        $gte: [
+                          {
+                            $indexOfArray: ['$$suggestion.userId', '$_id'],
+                          },
+                          0,
+                        ],
+                      },
+                      {
+                        $arrayElemAt: [
+                          '$$suggestion',
+                          {
+                            $indexOfArray: ['$$suggestion.userId', '$_id'],
+                          },
+                        ],
+                      },
+                      null,
+                    ],
+                  },
+                },
+              },
+            ],
+            as: 'relative',
+          },
+        },
+      ];
     } else if (userType == 'Member') {
       matchQuery = {
         $match: {
@@ -990,6 +1151,72 @@ exports.getBookingHistroyService = async ({ userId, userType }) => {
           },
         },
       };
+      memberRelativeQuery = [
+        {
+          $lookup: {
+            from: 'users',
+            let: { userId: '$userId', relative: '$relative' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: { $eq: ['$_id', ObjectId(userId)] },
+                },
+              },
+              {
+                $project: {
+                  _id: 0,
+                  username: 1,
+                  phoneNumber: 1,
+                  image: 1,
+                  height: 1,
+                  weight: 1,
+                  medicalCheckUp: 1,
+                  address: 1,
+                  dateOfBirth: 1,
+                },
+              },
+            ],
+            as: 'member',
+          },
+        },
+        {
+          $unwind: {
+            path: '$member',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $lookup: {
+            from: 'users',
+            let: { userId: '$userId', relative: '$relative' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $ne: ['$_id', ObjectId(userId)] },
+                      {
+                        $or: [
+                          { $eq: ['$_id', '$$userId'] },
+                          { $in: ['$_id', '$$relative'] },
+                        ],
+                      },
+                    ],
+                  },
+                },
+              },
+              {
+                $project: {
+                  _id: 0,
+                  userId: '$_id',
+                  username: 1,
+                },
+              },
+            ],
+            as: 'relative',
+          },
+        },
+      ];
     }
     let result = await UserBooking.aggregate([
       matchQuery,
@@ -1045,70 +1272,7 @@ exports.getBookingHistroyService = async ({ userId, userType }) => {
           preserveNullAndEmptyArrays: true,
         },
       },
-      {
-        $lookup: {
-          from: 'users',
-          let: { userId: '$userId', relative: '$relative' },
-          pipeline: [
-            {
-              $match: {
-                $expr: { $eq: ['$_id', ObjectId(userId)] },
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                username: 1,
-                phoneNumber: 1,
-                image: 1,
-                height: 1,
-                weight: 1,
-                medicalCheckUp: 1,
-                address: 1,
-                dateOfBirth: 1,
-              },
-            },
-          ],
-          as: 'member',
-        },
-      },
-      {
-        $unwind: {
-          path: '$member',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: 'users',
-          let: { userId: '$userId', relative: '$relative' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $ne: ['$_id', ObjectId(userId)] },
-                    {
-                      $or: [
-                        { $eq: ['$_id', '$$userId'] },
-                        { $in: ['$_id', '$$relative'] },
-                      ],
-                    },
-                  ],
-                },
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                userId: '$_id',
-                username: 1,
-              },
-            },
-          ],
-          as: 'relative',
-        },
-      },
+      ...memberRelativeQuery,
       {
         $sort: {
           startTime: -1,
