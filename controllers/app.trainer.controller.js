@@ -115,11 +115,18 @@ exports.getDietPlanController = async (req, res, next) => {
  */
 exports.suggestMemberController = async (req, res, next) => {
   try {
-    const { calorie, dietPlans, bookingId } = { ...req.params, ...req.body };
-    console.log(bookingId, ' dietPlans');
+    const { calorie = {}, bookingId } = { ...req.params, ...req.body };
+    const host = req.headers.host;
+
+    let suggestion = { ...JSON.parse(calorie) };
+    if (req.file) {
+      const fileName = req.file.uploadfilename;
+      suggestion.file =
+        req.protocol + '://' + host + '/public/uploads/suggestion/' + fileName;
+    }
+    console.log(suggestion, calorie);
     const response = await suggestMemberService({
-      calorie,
-      dietPlans,
+      suggestion,
       bookingId,
     });
     res.status(200).send(response);
@@ -158,6 +165,7 @@ exports.memberWeightNoteController = async (req, res, next) => {
       left_thigh,
       right_crural,
       left_crural,
+      userId,
     } = req.body;
     const { bookingId } = req.params;
     console.log(req.body);
@@ -176,6 +184,7 @@ exports.memberWeightNoteController = async (req, res, next) => {
       right_crural,
       left_crural,
       bookingId,
+      userId,
     });
     res.status(200).send(response);
   } catch (error) {

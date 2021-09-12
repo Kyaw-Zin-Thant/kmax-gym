@@ -137,7 +137,11 @@ exports.getTrainerBookingService = async ({ date, trainerId }) => {
       {
         $lookup: {
           from: 'users',
-          let: { userId: '$userId' },
+          let: {
+            userId: '$userId',
+            weight_comparison: '$weight_comparison',
+            suggestion: '$suggestion',
+          },
           pipeline: [
             {
               $match: {
@@ -149,6 +153,7 @@ exports.getTrainerBookingService = async ({ date, trainerId }) => {
             {
               $project: {
                 _id: 0,
+                userId: '$_id',
                 username: 1,
                 phoneNumber: 1,
                 image: 1,
@@ -157,6 +162,48 @@ exports.getTrainerBookingService = async ({ date, trainerId }) => {
                 medicalCheckUp: 1,
                 address: 1,
                 dateOfBirth: 1,
+                weight_comparison: {
+                  $cond: [
+                    {
+                      $gte: [
+                        {
+                          $indexOfArray: ['$$weight_comparison.userId', '$_id'],
+                        },
+                        0,
+                      ],
+                    },
+                    {
+                      $arrayElemAt: [
+                        '$$weight_comparison',
+                        {
+                          $indexOfArray: ['$$weight_comparison.userId', '$_id'],
+                        },
+                      ],
+                    },
+                    null,
+                  ],
+                },
+                suggestion: {
+                  $cond: [
+                    {
+                      $gte: [
+                        {
+                          $indexOfArray: ['$$suggestion.userId', '$_id'],
+                        },
+                        0,
+                      ],
+                    },
+                    {
+                      $arrayElemAt: [
+                        '$$suggestion',
+                        {
+                          $indexOfArray: ['$$suggestion.userId', '$_id'],
+                        },
+                      ],
+                    },
+                    null,
+                  ],
+                },
               },
             },
           ],
@@ -170,6 +217,75 @@ exports.getTrainerBookingService = async ({ date, trainerId }) => {
         },
       },
       {
+        $lookup: {
+          from: 'users',
+          let: {
+            relative: '$relative',
+            weight_comparison: '$weight_comparison',
+            suggestion: '$suggestion',
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $in: ['$_id', '$$relative'],
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                userId: '$_id',
+                username: 1,
+                weight_comparison: {
+                  $cond: [
+                    {
+                      $gte: [
+                        {
+                          $indexOfArray: ['$$weight_comparison.userId', '$_id'],
+                        },
+                        0,
+                      ],
+                    },
+                    {
+                      $arrayElemAt: [
+                        '$$weight_comparison',
+                        {
+                          $indexOfArray: ['$$weight_comparison.userId', '$_id'],
+                        },
+                      ],
+                    },
+                    null,
+                  ],
+                },
+                suggestion: {
+                  $cond: [
+                    {
+                      $gte: [
+                        {
+                          $indexOfArray: ['$$suggestion.userId', '$_id'],
+                        },
+                        0,
+                      ],
+                    },
+                    {
+                      $arrayElemAt: [
+                        '$$suggestion',
+                        {
+                          $indexOfArray: ['$$suggestion.userId', '$_id'],
+                        },
+                      ],
+                    },
+                    null,
+                  ],
+                },
+              },
+            },
+          ],
+          as: 'relative',
+        },
+      },
+      {
         $project: {
           _id: 0,
           bookingId: '$_id',
@@ -178,7 +294,7 @@ exports.getTrainerBookingService = async ({ date, trainerId }) => {
           techanics: 1,
           startTime: 1,
           endTime: 1,
-          weight_comparison: 1,
+          relative: 1,
         },
       },
     ]);
@@ -195,17 +311,45 @@ exports.bookingStatusUpdate = async ({ bookingId, status }) => {
       { status },
       { new: true }
     );
-    const { userId, trainerId, startTime, endTime, techanics } = booking;
+    const {
+      userId,
+      trainerId,
+      startTime,
+      endTime,
+      techanics,
+      relative = [],
+    } = booking;
     let userbookingHis = await UserHistory.findOne({ userId });
     let result = await Promise.all([
       User.findById(userId),
       User.findById(trainerId),
+      User.find({ _id: { $in: relative } }),
     ]);
     let user = result[0];
     let trainer = result[1];
+    let relativeUsers = result[2];
     const trainerName = trainer.username;
 
     const notiTime = moment(startTime).format('dddd, MMMM Do YYYY');
+    relativeUsers.map(async (relativeUser) => {
+      SendFirebaseMessage({
+        data: {
+          title: 'Your booking is ' + status,
+          body: `Your booking is ${status} at ${notiTime}. Trainer ${trainerName} For `,
+        },
+        notification: {
+          title: 'Your booking is ' + status,
+          body: `Your booking is ${status} at ${notiTime}. Trainer  ${trainerName} For `,
+        },
+        to: relativeUser.firebaseToken,
+      });
+      await new Notification({
+        title: 'You booking is ' + status,
+        body: `Your booking is ${status} at ${notiTime}. Trainer  ${trainerName}  `,
+        to: relativeUser._id,
+        type: 'booking',
+      }).save();
+    });
     SendFirebaseMessage({
       data: {
         title: 'Your booking is ' + status,
@@ -306,14 +450,13 @@ exports.getDietPlanService = async () => {
   }
 };
 
-exports.suggestMemberService = async ({ calorie, dietPlans, bookingId }) => {
+exports.suggestMemberService = async ({ suggestion, bookingId }) => {
   try {
     await TrainerBooking.updateOne(
       { _id: ObjectId(bookingId) },
       {
-        suggestion: {
-          burnCalorie: calorie,
-          dietPlans: dietPlans,
+        $push: {
+          suggestion: suggestion,
         },
       }
     );
@@ -337,10 +480,10 @@ exports.memberWeightNoteService = async ({
   right_crural,
   left_crural,
   bookingId,
+  userId,
 }) => {
   try {
     const booking = await TrainerBooking.findById(bookingId);
-    console.log(booking);
     await Promise.all([
       TrainerBooking.updateOne(
         { _id: ObjectId(bookingId) },
@@ -360,6 +503,7 @@ exports.memberWeightNoteService = async ({
               left_thigh,
               right_crural,
               left_crural,
+              userId,
             },
           },
         }

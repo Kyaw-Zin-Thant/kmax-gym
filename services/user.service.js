@@ -743,8 +743,17 @@ exports.getUserHomeService = async ({ userId, bookingDate }) => {
       UserBooking.aggregate([
         {
           $match: {
-            userId: ObjectId(userId),
-            status: { $ne: 'Reject' },
+            $expr: {
+              $and: [
+                {
+                  $or: [
+                    { $eq: ['$userId', ObjectId(userId)] },
+                    { $in: [ObjectId(userId), '$relative'] },
+                  ],
+                },
+                { $ne: ['$status', 'Reject'] },
+              ],
+            },
           },
         },
         {
@@ -755,6 +764,37 @@ exports.getUserHomeService = async ({ userId, bookingDate }) => {
                 { $lte: ['$endTime', endDate] },
               ],
             },
+          },
+        },
+        {
+          $lookup: {
+            from: 'users',
+            let: { userId: '$userId', relative: '$relative' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $ne: ['$_id', ObjectId(userId)] },
+                      {
+                        $or: [
+                          { $eq: ['$_id', '$$userId'] },
+                          { $in: ['$_id', '$$relative'] },
+                        ],
+                      },
+                    ],
+                  },
+                },
+              },
+              {
+                $project: {
+                  _id: 0,
+                  userId: '$_id',
+                  username: 1,
+                },
+              },
+            ],
+            as: 'relative',
           },
         },
         {
@@ -804,31 +844,6 @@ exports.getUserHomeService = async ({ userId, bookingDate }) => {
           },
         },
         {
-          $lookup: {
-            from: 'diet_plans',
-            let: { dietPlans: '$suggestion.dietPlans' },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $in: ['$_id', '$$dietPlans'],
-                  },
-                },
-              },
-              {
-                $project: {
-                  _id: 1,
-                  type: 1,
-                  name: 1,
-                  image: 1,
-                  calorie: 1,
-                },
-              },
-            ],
-            as: 'dietPlan',
-          },
-        },
-        {
           $project: {
             _id: 1,
             bookId: '$_id',
@@ -837,10 +852,54 @@ exports.getUserHomeService = async ({ userId, bookingDate }) => {
             endTime: '$endTime',
             trainer: 1,
             status: 1,
-            weight_comparison: 1,
+            relative: 1,
+            weight_comparison: {
+              $cond: [
+                {
+                  $gte: [
+                    {
+                      $indexOfArray: [
+                        '$weight_comparison.userId',
+                        ObjectId(userId),
+                      ],
+                    },
+                    0,
+                  ],
+                },
+                {
+                  $arrayElemAt: [
+                    '$weight_comparison',
+                    {
+                      $indexOfArray: [
+                        '$weight_comparison.userId',
+                        ObjectId(userId),
+                      ],
+                    },
+                  ],
+                },
+                null,
+              ],
+            },
             suggestion: {
-              burnCalorie: '$suggestion.burnCalorie',
-              dietPlans: '$dietPlan',
+              $cond: [
+                {
+                  $gte: [
+                    {
+                      $indexOfArray: ['$suggestion.userId', ObjectId(userId)],
+                    },
+                    0,
+                  ],
+                },
+                {
+                  $arrayElemAt: [
+                    '$suggestion',
+                    {
+                      $indexOfArray: ['$suggestion.userId', ObjectId(userId)],
+                    },
+                  ],
+                },
+                null,
+              ],
             },
           },
         },
@@ -923,7 +982,12 @@ exports.getBookingHistroyService = async ({ userId, userType }) => {
     } else if (userType == 'Member') {
       matchQuery = {
         $match: {
-          userId: ObjectId(userId),
+          $expr: {
+            $or: [
+              { $eq: ['$userId', ObjectId(userId)] },
+              { $in: [ObjectId(userId), '$relative'] },
+            ],
+          },
         },
       };
     }
@@ -984,13 +1048,11 @@ exports.getBookingHistroyService = async ({ userId, userType }) => {
       {
         $lookup: {
           from: 'users',
-          let: { userId: '$userId' },
+          let: { userId: '$userId', relative: '$relative' },
           pipeline: [
             {
               $match: {
-                $expr: {
-                  $eq: ['$_id', '$$userId'],
-                },
+                $expr: { $eq: ['$_id', ObjectId(userId)] },
               },
             },
             {
@@ -1017,33 +1079,39 @@ exports.getBookingHistroyService = async ({ userId, userType }) => {
         },
       },
       {
-        $sort: {
-          startTime: -1,
-        },
-      },
-      {
         $lookup: {
-          from: 'diet_plans',
-          let: { dietPlans: '$suggestion.dietPlans' },
+          from: 'users',
+          let: { userId: '$userId', relative: '$relative' },
           pipeline: [
             {
               $match: {
                 $expr: {
-                  $in: ['$_id', '$$dietPlans'],
+                  $and: [
+                    { $ne: ['$_id', ObjectId(userId)] },
+                    {
+                      $or: [
+                        { $eq: ['$_id', '$$userId'] },
+                        { $in: ['$_id', '$$relative'] },
+                      ],
+                    },
+                  ],
                 },
               },
             },
             {
               $project: {
-                _id: 1,
-                type: 1,
-                name: 1,
-                image: 1,
-                calorie: 1,
+                _id: 0,
+                userId: '$_id',
+                username: 1,
               },
             },
           ],
-          as: 'dietPlan',
+          as: 'relative',
+        },
+      },
+      {
+        $sort: {
+          startTime: -1,
         },
       },
       {
@@ -1056,14 +1124,59 @@ exports.getBookingHistroyService = async ({ userId, userType }) => {
           trainer: 1,
           member: 1,
           status: 1,
-          weight_comparison: 1,
+          relative: 1,
+          weight_comparison: {
+            $cond: [
+              {
+                $gte: [
+                  {
+                    $indexOfArray: [
+                      '$weight_comparison.userId',
+                      ObjectId(userId),
+                    ],
+                  },
+                  0,
+                ],
+              },
+              {
+                $arrayElemAt: [
+                  '$weight_comparison',
+                  {
+                    $indexOfArray: [
+                      '$weight_comparison.userId',
+                      ObjectId(userId),
+                    ],
+                  },
+                ],
+              },
+              null,
+            ],
+          },
           suggestion: {
-            burnCalorie: '$suggestion.burnCalorie',
-            dietPlans: '$dietPlan',
+            $cond: [
+              {
+                $gte: [
+                  {
+                    $indexOfArray: ['$suggestion.userId', ObjectId(userId)],
+                  },
+                  0,
+                ],
+              },
+              {
+                $arrayElemAt: [
+                  '$suggestion',
+                  {
+                    $indexOfArray: ['$suggestion.userId', ObjectId(userId)],
+                  },
+                ],
+              },
+              null,
+            ],
           },
         },
       },
     ]);
+    console.log(result + 'gg');
     return result;
   } catch (error) {
     throw error;
