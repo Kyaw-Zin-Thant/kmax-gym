@@ -49,6 +49,7 @@ const schema = {
   ],
   review: String,
   rating: Number,
+  amount: Number,
 };
 const UserApplyTrainerSchema = new Schema(schema, {
   timestamps: {

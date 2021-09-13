@@ -49,12 +49,11 @@ exports.creatPaymentService = async ({
             createdUser: userId,
             currency,
             payUserId,
-            feeId,
           }).save(),
           Account.findByIdAndUpdate(accountId, {
             $set: { amount: accountAmount },
           }),
-          User.findByIdAndUpdate(userId, { $set: { noOfDay } }),
+          User.findByIdAndUpdate(userId, { $set: { amount } }),
         ])
       : await Promise.all([
           new Payment({
@@ -112,13 +111,13 @@ exports.updatePaymentService = async ({
     if (status == 'Approved') {
       const user = await User.findById(result[2].createdUser);
       if (user) {
-        const noOfDay =
-          user.metadata && user.metadata.noOfDay
-            ? parseInt(user.metadata.noOfDay) + (user.noOfDay || 1)
-            : user.noOfDay || 1;
+        const amount =
+          user.metadata && user.metadata.amount
+            ? parseInt(user.metadata.amount) + (user.amount || 0)
+            : user.amount || 0;
         await User.findByIdAndUpdate(user._id, {
           $set: {
-            'metadata.noOfDay': noOfDay,
+            'metadata.amount': amount,
             'metadata.status': status,
           },
         });

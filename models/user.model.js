@@ -70,7 +70,8 @@ const schema = {
   metadata: {
     latitude: String,
     longitude: String,
-    noOfDay: String,
+    noOfDay: Number,
+    amount: Number,
     status: String,
   },
   weight_comparison: [
@@ -94,7 +95,7 @@ const schema = {
       },
     },
   ],
-  noOfDay: Number,
+  amount: Number,
 };
 const UserSchema = new Schema(schema, {
   timestamps: {

@@ -4,6 +4,7 @@ var calcBmi = require('bmi-calc');
 const UserBooking = require('../models/user.booking.trainer.model');
 const { SendFirebaseMessage } = require('./firebase.messaging.service');
 const Notification = require('../models/notification.model');
+const Fee = require('../models/fee.model');
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Types;
 exports.updatMemberInfoService = async ({
@@ -83,7 +84,8 @@ exports.memberDetailInfoService = async ({ userId }) => {
       address ? muli_address.push(address) : '';
       console.log('user address ' + address);
       muli_address = [...new Set(muli_address)];
-      const { noOfDay = '0' } = metadata;
+      let { amount = 0 } = metadata;
+      amount = amount + '';
       return {
         username,
         dateOfBirth,
@@ -104,7 +106,8 @@ exports.memberDetailInfoService = async ({ userId }) => {
         surgery,
         other,
         muli_address,
-        noOfDay,
+        noOfDay: amount,
+        amount,
       };
     } else {
       return null;
@@ -139,7 +142,7 @@ exports.bookingService = async ({
     const checkOld = await UserBooking.findOne({
       trainerId: ObjectId(trainerId),
       startTime: startDate,
-      status: { $ne: 'Reject' },
+      status: { $not: { $in: ['Reject', 'Canceled'] } },
     });
     if (checkOld) {
       const Alerror = new Error('Your Trainer is already booked');
@@ -160,7 +163,10 @@ exports.bookingService = async ({
         userBooking.save(),
         User.findById(trainerId),
         User.findById(userId),
+        Fee.findOne({ noOfUser: relative.length + 1 }),
       ]);
+      const fee = result[3];
+      const restAmount = fee ? fee.amount : 15000 * relative.length + 1;
       await new Notification({
         title: 'You have a booking from Member ' + result[2].username,
         body:
@@ -188,11 +194,16 @@ exports.bookingService = async ({
           // priority: 'normal',
           to: result[1].firebaseToken || '',
         });
-      const noOfDay = parseInt(result[2].metadata.noOfDay) - 1;
+      const noOfDay = result[2].metadata.amount - restAmount;
 
-      await User.findByIdAndUpdate(userId, {
-        $set: { 'metadata.noOfDay': noOfDay },
-      });
+      await Promise.all([
+        User.findByIdAndUpdate(userId, {
+          $set: { 'metadata.amount': noOfDay },
+        }),
+        UserBooking.findByIdAndUpdate(result[0]._id, {
+          $set: { amount: restAmount },
+        }),
+      ]);
       return { message: 'Successfully Booked', bookingId: result[0]._id };
     }
   } catch (error) {
@@ -232,12 +243,13 @@ exports.cancelBookingServices = async ({ bookingId }) => {
       const trainerName = user.username;
 
       const notiTime = moment(booking.startTime).format('dddd, MMMM Do YYYY');
+      const returnedAmount = booking.amount ? booking.amount : 0;
       const noOfDay =
-        user.metadata && user.metadata.noOfDay
-          ? parseInt(user.metadata.noOfDay) + 1
-          : 1;
+        user.metadata && user.metadata.amount
+          ? parseInt(user.metadata.amount) + returnedAmount
+          : returnedAmount;
       await User.findByIdAndUpdate(user._id, {
-        $set: { 'metadata.noOfDay': noOfDay },
+        $set: { 'metadata.amount': noOfDay },
       });
       SendFirebaseMessage({
         data: {
