@@ -369,11 +369,11 @@ exports.bookingStatusUpdate = async ({ bookingId, status }) => {
     }).save();
     if (status.toUpperCase() == 'REJECT') {
       const noOfDay =
-        user.metadata && user.metadata.noOfDay
-          ? parseInt(user.metadata.noOfDay) + 1
-          : 1;
+        user.metadata && user.metadata.amount
+          ? parseInt(user.metadata.amount) + booking.amount
+          : booking.amount;
       await User.findByIdAndUpdate(user._id, {
-        $set: { 'metadata.noOfDay': noOfDay },
+        $set: { 'metadata.amount': noOfDay },
       });
     }
     if (userbookingHis && status == 'Accept') {
