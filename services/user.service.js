@@ -844,6 +844,13 @@ exports.getUserHomeService = async ({ userId, bookingDate }) => {
           },
         },
         {
+          $match: {
+            $expr: {
+              $gt: [{ $size: '$trainer' }, 0],
+            },
+          },
+        },
+        {
           $project: {
             _id: 1,
             bookId: '$_id',
